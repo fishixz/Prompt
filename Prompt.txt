@@ -1,0 +1,1433 @@
+ROCHASYSTEM — REESTRUTURAÇÃO E EVOLUÇÃO DO CELULAR
+
+Continue trabalhando no projeto atual exatamente a partir do estado em que ele se encontra.
+
+Este projeto faz parte do ecossistema do Rocha Roleplay e representa a interface do sistema de celular utilizado pelo servidor.
+
+O objetivo deste prompt é trabalhar EXCLUSIVAMENTE na interface, experiência de usuário, navegação, componentes, estados visuais e preparação dos aplicativos do celular.
+
+Não tente implementar neste momento a integração direta com a gamemode SA-MP, scriptfiles, bancos da gamemode ou qualquer outro sistema externo que ainda não tenha uma API definida.
+
+A comunicação com o servidor será feita posteriormente através de uma API própria do RochaSystem.
+
+---
+
+REGRA PRINCIPAL
+
+Antes de alterar qualquer coisa:
+
+1. Analise completamente o projeto atual.
+2. Entenda a arquitetura existente.
+3. Identifique os componentes reutilizáveis.
+4. Identifique os aplicativos já existentes.
+5. Identifique como o celular abre e fecha.
+6. Identifique como as páginas são navegadas.
+7. Identifique como temas e idiomas funcionam atualmente.
+8. Identifique quais dados atualmente são mockados.
+9. Identifique quais sistemas já possuem alguma integração.
+10. Não recrie o projeto do zero.
+11. Não substitua sistemas funcionais por versões simplificadas.
+12. Não remova funcionalidades existentes sem necessidade.
+13. Não altere visualmente algo que já funciona corretamente sem motivo.
+14. Não crie dados falsos para simular funcionalidades reais quando uma estrutura melhor puder ser preparada para futura integração.
+15. Não implemente backend externo neste momento.
+16. Não invente endpoints de uma API que ainda não foi fornecida.
+17. Não invente dados provenientes da gamemode.
+18. Quando uma informação depender do servidor, prepare a interface para recebê-la através de uma camada de serviço/API futuramente.
+
+---
+
+IMPORTANTE — ARQUITETURA FUTURA
+
+O celular será conectado futuramente ao:
+
+RochaSystem
+
+O RochaSystem será responsável pela API/backend que fará a comunicação entre:
+
+SA-MP / Gamemode
+↓
+RochaSystem API
+↓
+CEF / Launcher
+↓
+Aplicativos do celular
+
+Portanto, neste projeto:
+
+- não implemente comunicação direta com SA-MP;
+- não implemente scriptfiles;
+- não crie arquivos de jogador;
+- não crie banco paralelo para substituir o servidor;
+- não invente sistema próprio de persistência para dados que pertencem ao servidor;
+- não invente números telefônicos;
+- não invente saldo bancário;
+- não invente jogadores;
+- não invente contatos globais;
+- não invente mensagens como se fossem reais.
+
+Quando uma funcionalidade precisar de dados externos, crie uma camada de serviço bem definida para que posteriormente a API do RochaSystem possa ser conectada sem precisar reescrever toda a interface.
+
+Exemplo conceitual:
+
+UI
+ ↓
+Service
+ ↓
+RochaSystem API
+ ↓
+Gamemode / Dados reais
+
+Não é obrigatório utilizar exatamente esses nomes.
+
+---
+
+EXECUÇÃO POR FASES
+
+Execute o trabalho em fases.
+
+Não tente executar todas as fases de uma vez.
+
+Dentro de cada chamada, implemente o maior número de fases que conseguir concluir com segurança, respeitando a ordem.
+
+Porém:
+
+- não comece uma fase se a anterior estiver incompleta;
+- teste o que foi alterado;
+- revise os arquivos modificados;
+- procure regressões;
+- corrija os problemas encontrados.
+
+Quando chegar ao limite do que consegue implementar/testar com segurança naquela chamada, pare.
+
+Nesse momento, informe:
+
+- quais fases foram concluídas;
+- quais foram testadas;
+- quais problemas foram encontrados;
+- em qual fase você parou;
+- o que falta fazer.
+
+Depois pergunte:
+
+"Posso prosseguir para as próximas fases?"
+
+Quando eu responder que sim, continue exatamente de onde parou.
+
+Antes de cada nova execução, releia este prompt e confirme mentalmente a ordem das fases para não se perder.
+
+---
+
+FASE 0 — ANÁLISE DO PROJETO
+
+Antes de modificar código, faça uma análise completa.
+
+Mapeie:
+
+- estrutura de pastas;
+- componentes;
+- páginas;
+- aplicativos;
+- hooks;
+- contextos;
+- serviços;
+- estados globais;
+- sistema de navegação;
+- sistema de temas;
+- sistema de idiomas;
+- componentes compartilhados;
+- modais;
+- componentes de telefone;
+- componentes do WhatsApp;
+- componentes de contatos;
+- componentes de mensagens;
+- componentes de chamadas.
+
+Identifique também:
+
+- código duplicado;
+- componentes inutilizados;
+- dados mockados;
+- componentes quebrados;
+- estados inconsistentes;
+- listeners duplicados;
+- timers;
+- intervalos;
+- efeitos que executam excessivamente;
+- problemas de montagem/desmontagem.
+
+Não altere nada ainda se não for necessário.
+
+Primeiro compreenda a arquitetura existente.
+
+---
+
+FASE 1 — RESPONSIVIDADE DO CELULAR
+
+Corrija o problema atual em que o celular não se adapta corretamente a telas menores.
+
+O celular deve:
+
+- respeitar a largura disponível;
+- respeitar a altura disponível;
+- manter proporção;
+- não ultrapassar o viewport;
+- não cortar a parte superior;
+- não cortar notch;
+- não cortar cabeçalho;
+- não cortar conteúdo;
+- adaptar-se automaticamente;
+- continuar agradável em telas grandes;
+- funcionar após redimensionamento da janela.
+
+Não simplesmente esconda partes do celular.
+
+Corrija a escala e o dimensionamento corretamente.
+
+Teste visualmente:
+
+- desktop;
+- telas pequenas;
+- resoluções menores;
+- diferentes proporções;
+- redimensionamento.
+
+---
+
+FASE 2 — REMOVER BOTÃO X DO CELULAR
+
+Remova o botão visual de fechar:
+
+X
+
+O celular já possui mecanismo de fechamento através de duplo clique fora dele.
+
+Mantenha esse comportamento funcionando.
+
+Teste:
+
+- abrir;
+- fechar;
+- duplo clique fora;
+- abrir novamente;
+- navegar e fechar.
+
+A remoção do X não pode quebrar o estado do celular.
+
+---
+
+FASE 3 — CONFIGURAÇÕES / NOTIFICAÇÕES
+
+Na área:
+
+Configurações → Notificações
+
+existem aplicativos inexistentes ou sem ícone.
+
+Corrija a origem da lista.
+
+A interface deve mostrar somente aplicativos realmente disponíveis no sistema do celular.
+
+Não exibir:
+
+- aplicativos inexistentes;
+- placeholders;
+- entradas duplicadas;
+- aplicativos removidos;
+- itens sem identificação.
+
+Reutilize a mesma fonte de aplicativos utilizada pelo restante do sistema quando possível.
+
+Não crie uma segunda lista manual.
+
+---
+
+FASE 4 — IDIOMA DO CELULAR
+
+Na área:
+
+General → Language & Region
+
+deixe somente:
+
+- Português (Brasil)
+- English
+
+Implemente a troca real da interface nativa do celular.
+
+Português deverá alterar elementos como:
+
+- Configurações;
+- Geral;
+- Idioma e Região;
+- Tela e Brilho;
+- Notificações;
+- Telefone;
+- Contatos;
+- Mensagens;
+- Câmera;
+- botões;
+- menus;
+- títulos;
+- alertas;
+- textos internos.
+
+English deverá alterar esses mesmos elementos para inglês.
+
+Exemplo:
+
+Português:
+
+Configurações
+
+English:
+
+Settings
+
+Não faça apenas uma troca superficial.
+
+Centralize o sistema de tradução.
+
+Evite:
+
+if (...)
+
+espalhados por centenas de componentes.
+
+Utilize uma estrutura de tradução organizada.
+
+Aplicativos que possuem identidade própria brasileira podem manter seus próprios textos.
+
+Por exemplo:
+
+- OLX;
+- RoBank.
+
+Não traduza nomes próprios de aplicativos.
+
+---
+
+FASE 5 — SISTEMA DE TEMA
+
+Na área:
+
+Display & Brightness
+
+corrija os cards de:
+
+- Light;
+- Dark.
+
+Cada opção deve apresentar corretamente sua preview.
+
+Ao selecionar:
+
+Light
+
+o celular deverá mudar para o tema claro.
+
+Ao selecionar:
+
+Dark
+
+o celular deverá mudar para o tema escuro.
+
+A interface deve indicar visualmente qual tema está selecionado.
+
+Centralize o sistema de tema para evitar componentes mantendo estados diferentes.
+
+---
+
+FASE 6 — WALLPAPER
+
+Corrija o sistema visual de wallpapers.
+
+Problema atual:
+
+a preview apresenta flickering/piscadas nos ícones e aplicativos.
+
+Investigue a causa real.
+
+Procure por:
+
+- renderizações repetidas;
+- timers;
+- setInterval;
+- efeitos;
+- mudanças de estado;
+- remounts;
+- animações conflitantes.
+
+Não esconda simplesmente os elementos.
+
+Corrija a causa.
+
+---
+
+FASE 6.1 — LISTA DE WALLPAPERS
+
+A seleção deve mostrar corretamente os wallpapers disponíveis.
+
+Cada wallpaper deve aparecer:
+
+uma única vez.
+
+Não duplicar imagens.
+
+Não duplicar cards.
+
+Não gerar cópias através de loops incorretos.
+
+---
+
+FASE 6.2 — REMOVER "ADICIONAR MAIS"
+
+Remova o botão:
+
+Adicionar mais
+
+ou equivalente.
+
+O jogador deverá selecionar somente entre os wallpapers disponibilizados pelo sistema.
+
+---
+
+FASE 7 — NAVEGAÇÃO DO WHATSAPP
+
+O WhatsApp deve possuir uma navegação semelhante à lógica de um aplicativo real.
+
+Evite utilizar modais para representar páginas inteiras.
+
+Quando o jogador quiser:
+
+- iniciar conversa;
+- visualizar contatos;
+- criar contato;
+- abrir perfil;
+- visualizar informações;
+
+utilize páginas/telas internas do aplicativo.
+
+Modais continuam permitidos para:
+
+- confirmação;
+- alertas;
+- pequenas ações;
+- menus contextuais;
+- confirmações de exclusão;
+- ações rápidas.
+
+Mas não utilize modal para substituir uma página inteira.
+
+---
+
+FASE 8 — WHATSAPP / TELA DE CONTATOS
+
+Ao clicar no botão responsável por iniciar uma conversa ou visualizar contatos:
+
+não abrir apenas um modal.
+
+Abrir uma página interna do WhatsApp.
+
+A página deve possuir:
+
+- cabeçalho;
+- botão voltar;
+- busca;
+- lista de contatos;
+- identificação;
+- avatar;
+- número;
+- botão para novo contato.
+
+A navegação deve parecer parte natural do WhatsApp.
+
+---
+
+FASE 9 — WHATSAPP / NOVO CONTATO
+
+Criar uma página dedicada para:
+
+Novo contato
+
+Campos:
+
+- nome;
+- sobrenome, quando aplicável;
+- número;
+- foto opcional, se o sistema atual suportar.
+
+A interface deve possuir:
+
+- validação;
+- estados de loading quando necessário;
+- mensagens de erro;
+- botão salvar;
+- botão cancelar/voltar.
+
+IMPORTANTE:
+
+Neste momento não crie uma persistência de servidor.
+
+Prepare o componente para futuramente utilizar:
+
+ContactService
+
+ou estrutura equivalente.
+
+A futura API poderá substituir a implementação sem necessidade de reconstruir a interface.
+
+---
+
+FASE 10 — WHATSAPP / PERFIL
+
+O perfil do contato/jogador também deverá ser uma página interna.
+
+Não utilize um modal gigante como substituto.
+
+Criar:
+
+- cabeçalho;
+- botão voltar;
+- foto;
+- nome;
+- número;
+- informações disponíveis;
+- ações relacionadas.
+
+A página deverá ser reutilizável.
+
+---
+
+FASE 11 — WHATSAPP / CONVERSA
+
+A tela de conversa deve ser estruturada como uma conversa real.
+
+Deve possuir:
+
+- cabeçalho;
+- avatar;
+- nome;
+- status quando disponível;
+- área de mensagens;
+- mensagens enviadas;
+- mensagens recebidas;
+- campo de texto;
+- botão enviar;
+- estados de envio;
+- tratamento de erro.
+
+A interface deve ser preparada para receber mensagens reais posteriormente.
+
+Não inventar mensagens aleatórias.
+
+Caso seja necessário utilizar dados temporários apenas para desenvolver a UI, deixe isso claramente isolado em uma camada de mock que possa ser removida/substituída posteriormente.
+
+---
+
+FASE 12 — WHATSAPP / NÚMERO DE TELEFONE
+
+O WhatsApp deve utilizar o mesmo padrão visual global do sistema telefônico.
+
+Formato:
+
+000-000
+
+Exemplo:
+
+Internamente:
+
+123456
+
+Visualmente:
+
+123-456
+
+Não implemente uma formatação diferente somente no WhatsApp.
+
+Crie/reutilize uma função global:
+
+formatPhoneNumber()
+
+ou equivalente.
+
+Ela deverá ser reutilizada por:
+
+- WhatsApp;
+- Telefone;
+- SMS;
+- Contatos;
+- histórico;
+- perfil;
+- chamadas.
+
+A implementação interna pode utilizar o número sem máscara.
+
+---
+
+FASE 13 — PREPARAÇÃO DA API DE MENSAGENS
+
+Não implementar ainda o backend real.
+
+Porém, organize a arquitetura para que o WhatsApp não dependa diretamente da interface.
+
+Criar uma camada conceitual semelhante a:
+
+WhatsAppService
+MessageService
+ContactService
+
+Esses serviços deverão futuramente conversar com o:
+
+RochaSystem API
+
+Exemplo conceitual:
+
+WhatsApp UI
+      ↓
+WhatsAppService
+      ↓
+RochaSystem API
+
+A UI não deverá precisar conhecer:
+
+- URL da API;
+- headers;
+- autenticação;
+- WebSocket;
+- formato interno do servidor.
+
+Essas responsabilidades deverão ficar isoladas na camada de serviço.
+
+---
+
+FASE 14 — PREPARAÇÃO PARA CHAMADAS DE ÁUDIO
+
+IMPORTANTE:
+
+O WhatsApp terá:
+
+CHAMADA DE ÁUDIO SOMENTE.
+
+Não implementar chamada de vídeo no WhatsApp.
+
+Não criar:
+
+- câmera durante chamada;
+- vídeo do jogador;
+- video preview;
+- botão de vídeo;
+- transmissão de câmera.
+
+O sistema deverá possuir somente:
+
+Audio Call
+
+---
+
+FASE 15 — DOIS TIPOS DE CHAMADA
+
+O RochaSystem deverá futuramente suportar dois tipos de chamada.
+
+TIPO 1 — TELEFONE NORMAL
+
+Representa uma ligação telefônica tradicional.
+
+Conceitualmente:
+
+Phone Call
+
+TIPO 2 — WHATSAPP
+
+Representa uma chamada de áudio através do WhatsApp.
+
+Conceitualmente:
+
+WhatsApp Audio Call
+
+IMPORTANTE:
+
+Os dois sistemas deverão utilizar a mesma infraestrutura de chamada sempre que possível.
+
+Não criar dois sistemas de áudio completamente independentes.
+
+A diferença entre eles deverá ser principalmente:
+
+callType
+
+Por exemplo:
+
+phone
+whatsapp
+
+ou equivalente.
+
+---
+
+FASE 16 — API DE CHAMADAS
+
+Prepare a interface para uma API de chamadas unificada.
+
+Conceito:
+
+CallService
+
+O serviço deverá permitir futuramente:
+
+createCall()
+acceptCall()
+rejectCall()
+cancelCall()
+endCall()
+muteCall()
+unmuteCall()
+
+A implementação final da comunicação ficará posteriormente no RochaSystem.
+
+A UI deverá apenas reagir aos estados da chamada.
+
+---
+
+FASE 17 — ESTADOS DA CHAMADA
+
+A interface deve estar preparada para os seguintes estados:
+
+idle
+calling
+ringing
+connecting
+connected
+ended
+rejected
+busy
+failed
+
+Não é necessário que todos estejam conectados ao backend agora.
+
+Mas a arquitetura visual deve suportá-los.
+
+Exemplo:
+
+Calling
+
+Mostrar:
+
+- nome;
+- avatar;
+- número;
+- texto "Chamando...";
+- botão cancelar.
+
+Ringing
+
+Mostrar:
+
+- nome;
+- avatar;
+- chamada recebida;
+- botão aceitar;
+- botão recusar.
+
+Connecting
+
+Mostrar:
+
+- conexão em andamento.
+
+Connected
+
+Mostrar:
+
+- duração;
+- nome;
+- avatar;
+- botão mute;
+- botão encerrar.
+
+Ended
+
+Retornar corretamente à tela anterior.
+
+---
+
+FASE 18 — MUTE
+
+A chamada deverá possuir botão:
+
+Mute / Desmutar
+
+Quando o jogador pressionar:
+
+Mute
+
+o microfone deverá entrar no estado:
+
+muted = true
+
+Visualmente o botão deverá indicar que o jogador está mutado.
+
+Ao pressionar novamente:
+
+muted = false
+
+O microfone volta ao estado normal.
+
+IMPORTANTE:
+
+A UI deve ser separada da implementação de áudio.
+
+Conceitualmente:
+
+Call UI
+ ↓
+CallService
+ ↓
+Audio Engine
+
+Quando o áudio real for implementado posteriormente, o botão já estará preparado para chamar o serviço correspondente.
+
+---
+
+FASE 19 — INTERFACE DA CHAMADA
+
+Criar uma interface visual dedicada para chamadas.
+
+Ela deverá funcionar tanto para:
+
+Telefone normal
+
+quanto:
+
+WhatsApp Audio
+
+A interface deverá poder receber:
+
+- tipo da chamada;
+- nome;
+- número;
+- avatar;
+- estado;
+- duração;
+- mute;
+- encerramento.
+
+Evitar duplicar completamente o componente.
+
+Idealmente:
+
+CallScreen
+
+recebe:
+
+callType
+
+e adapta pequenas diferenças visuais.
+
+---
+
+FASE 20 — DIFERENCIAÇÃO VISUAL DOS TIPOS
+
+Embora a infraestrutura seja compartilhada, a interface pode indicar claramente o tipo de chamada.
+
+Por exemplo:
+
+Telefone
+Ligação telefônica
+
+e:
+
+WhatsApp
+Chamada de áudio
+
+Não adicionar vídeo ao WhatsApp.
+
+Não criar funcionalidades de câmera relacionadas à chamada.
+
+---
+
+FASE 21 — PREPARAÇÃO PARA RESTRIÇÕES FUTURAS
+
+No futuro, a gamemode poderá determinar regras diferentes.
+
+Por exemplo:
+
+Telefone normal
+
+Poderá exigir:
+
+- crédito;
+- saldo;
+- plano;
+- serviço telefônico.
+
+WhatsApp
+
+Poderá exigir:
+
+- internet;
+- dados móveis;
+- conexão.
+
+Essas regras NÃO devem ser implementadas agora.
+
+Porém, a arquitetura deve permitir futuramente algo semelhante a:
+
+canStartCall()
+
+ou:
+
+callPermission
+
+A interface poderá futuramente receber da API:
+
+allowed
+reason
+
+Exemplo:
+
+allowed: false
+reason: "Sem créditos"
+
+A UI então exibirá a mensagem correspondente.
+
+Não codifique regras de negócio diretamente no frontend.
+
+---
+
+FASE 22 — CAMADA DE SERVIÇOS
+
+Revise a arquitetura e, quando necessário, crie serviços separados.
+
+Estrutura conceitual:
+
+services/
+    api/
+    phone/
+    whatsapp/
+    contacts/
+    messages/
+    calls/
+
+Não é obrigatório utilizar exatamente essa estrutura.
+
+O objetivo é separar:
+
+Interface
+
+de:
+
+Regra de comunicação
+
+e:
+
+API externa
+
+Evitar:
+
+Componente React
+↓
+fetch()
+↓
+endpoint
+↓
+tratamento de autenticação
+
+espalhado por vários componentes.
+
+Centralize.
+
+---
+
+FASE 23 — API CLIENT FUTURA
+
+Prepare uma camada central para comunicação futura com o RochaSystem.
+
+Conceitualmente:
+
+apiClient
+
+Ela poderá posteriormente cuidar de:
+
+- URL base;
+- autenticação;
+- headers;
+- requests;
+- respostas;
+- erros;
+- timeout;
+- reconexão;
+- WebSocket;
+- eventos.
+
+Neste momento, não invente a API.
+
+Se os endpoints ainda não existirem, deixe interfaces/contratos preparados sem fingir que a integração real está funcionando.
+
+---
+
+FASE 24 — EVENTOS EM TEMPO REAL
+
+Como mensagens e chamadas futuramente precisarão funcionar em tempo real, a arquitetura deverá estar preparada para receber eventos.
+
+Exemplos futuros:
+
+message:new
+message:received
+
+call:incoming
+call:ringing
+call:accepted
+call:rejected
+call:ended
+
+contact:updated
+
+Não é necessário implementar o servidor desses eventos agora.
+
+Porém, evite criar uma arquitetura que dependa exclusivamente de polling constante.
+
+Quando a API real for criada, poderá ser utilizado:
+
+- WebSocket;
+- SSE;
+- outro mecanismo apropriado.
+
+---
+
+FASE 25 — TRATAMENTO DE ESTADOS
+
+Revise os componentes para evitar estados inconsistentes.
+
+Exemplos:
+
+- botão enviar pressionado várias vezes;
+- chamada sendo iniciada duas vezes;
+- múltiplas telas de chamada abertas;
+- dois listeners para o mesmo evento;
+- timer de chamada continuando depois que ela terminou;
+- áudio continuando depois que a tela foi fechada;
+- componente desmontado ainda executando callbacks.
+
+Garanta cleanup adequado.
+
+---
+
+FASE 26 — TIMER DA CHAMADA
+
+Quando uma chamada estiver:
+
+connected
+
+iniciar contador de duração.
+
+Exemplo:
+
+00:01
+00:02
+00:03
+
+Ao terminar a chamada:
+
+- parar timer;
+- limpar estado;
+- não continuar contando em background;
+- liberar listeners relacionados.
+
+Não utilize múltiplos timers para a mesma chamada.
+
+---
+
+FASE 27 — HISTÓRICO VISUAL DE CHAMADAS
+
+Prepare a interface do histórico para suportar posteriormente:
+
+- chamada realizada;
+- chamada recebida;
+- chamada perdida;
+- chamada recusada;
+- duração;
+- horário;
+- tipo.
+
+O tipo poderá ser:
+
+phone
+whatsapp
+
+Neste momento, não invente dados reais.
+
+A interface deve estar preparada para receber os dados da API.
+
+---
+
+FASE 28 — EXPERIÊNCIA DO WHATSAPP
+
+Faça uma revisão geral da interface do WhatsApp.
+
+O aplicativo deve parecer um sistema único e coerente.
+
+Verifique:
+
+- navegação;
+- animações;
+- botões;
+- espaçamentos;
+- cabeçalhos;
+- busca;
+- conversas;
+- contatos;
+- perfil;
+- chamadas;
+- estados vazios;
+- loading;
+- erros.
+
+Evite telas desconectadas visualmente.
+
+---
+
+FASE 29 — ESTADOS VAZIOS
+
+Criar estados vazios apropriados.
+
+Exemplos:
+
+Sem conversas
+
+Mostrar uma mensagem adequada.
+
+Sem contatos
+
+Mostrar:
+
+Nenhum contato encontrado.
+
+com opção para adicionar contato.
+
+Nenhum resultado na busca
+
+Mostrar estado específico.
+
+Histórico vazio
+
+Mostrar estado apropriado.
+
+Não preencher telas vazias com dados falsos.
+
+---
+
+FASE 30 — LOADING E ERROS
+
+Todas as operações que futuramente dependerão da API deverão possuir estados:
+
+idle
+loading
+success
+error
+
+Evitar:
+
+- loading infinito;
+- botão travado;
+- tela branca;
+- erro silencioso;
+- componentes quebrados.
+
+Mensagens de erro devem ser compreensíveis.
+
+Nunca exibir:
+
+- stack trace;
+- erro interno;
+- informações sensíveis;
+- detalhes técnicos da API.
+
+---
+
+FASE 31 — LIMPEZA DE CÓDIGO
+
+Depois de implementar as alterações:
+
+procure por:
+
+- componentes duplicados;
+- funções duplicadas;
+- hooks duplicados;
+- listeners duplicados;
+- timers;
+- intervalos;
+- imports inutilizados;
+- estados inutilizados;
+- código morto;
+- mockups esquecidos;
+- componentes antigos;
+- lógica espalhada;
+- formatação duplicada de telefone.
+
+Não faça uma refatoração gigante sem necessidade.
+
+A prioridade é manter o sistema estável.
+
+---
+
+FASE 32 — TESTE DO CELULAR
+
+Teste:
+
+- abrir;
+- fechar;
+- duplo clique fora;
+- diferentes tamanhos;
+- redimensionamento;
+- navegação;
+- troca de idioma;
+- troca de tema;
+- wallpaper.
+
+Nenhuma parte deve ficar cortada.
+
+---
+
+FASE 33 — TESTE DO WHATSAPP
+
+Teste visualmente:
+
+- abrir;
+- entrar em contatos;
+- pesquisar;
+- abrir contato;
+- criar contato;
+- voltar;
+- abrir conversa;
+- abrir perfil;
+- voltar;
+- iniciar chamada;
+- visualizar tela de chamada;
+- mute;
+- desmutar;
+- encerrar chamada.
+
+Não deve haver:
+
+- modal indevido;
+- tela sobreposta incorretamente;
+- botão sem ação;
+- navegação quebrada.
+
+---
+
+FASE 34 — TESTE DOS DOIS TIPOS DE CHAMADA
+
+A arquitetura deve permitir:
+
+Telefone
+
+Phone → CallService → Phone Call
+
+WhatsApp
+
+WhatsApp → CallService → WhatsApp Audio Call
+
+Os dois devem compartilhar a infraestrutura.
+
+O WhatsApp não deve possuir vídeo.
+
+---
+
+FASE 35 — TESTE DE MUTE
+
+Verifique:
+
+1. chamada iniciada;
+2. chamada conectada;
+3. botão mute disponível;
+4. pressionar mute;
+5. estado visual alterado;
+6. pressionar novamente;
+7. estado visual restaurado;
+8. encerrar chamada;
+9. estado de mute limpo.
+
+---
+
+FASE 36 — PREPARAÇÃO PARA O ROCHASYSTEM
+
+Antes de finalizar, revise toda a arquitetura pensando na futura integração:
+
+ROCHA ROLEPLAY
+       ↓
+Gamemode
+       ↓
+RochaSystem API
+       ↓
+CEF / Launcher
+       ↓
+Celular
+       ↓
+WhatsApp / Telefone
+       ↓
+CallService / MessageService / ContactService
+
+O frontend não deve precisar ser refeito quando a API real estiver pronta.
+
+Apenas a implementação dos serviços/adapters deverá ser conectada à API real.
+
+---
+
+FASE 37 — NÃO IMPLEMENTAR AGORA
+
+Não implemente neste prompt:
+
+- scriptfiles;
+- persistência na gamemode;
+- banco da gamemode;
+- saldo bancário;
+- PIX real;
+- OLX backend;
+- chamadas 190;
+- chamadas 192;
+- regras de crédito;
+- regras de internet;
+- autenticação SA-MP;
+- integração direta com Pawn;
+- sistema de áudio definitivo;
+- WebRTC definitivo;
+- servidor de voz;
+- armazenamento de fotos;
+- galeria;
+- câmera;
+- chamadas de vídeo.
+
+Esses sistemas serão tratados posteriormente.
+
+Especialmente:
+
+WhatsApp = somente áudio.
+
+Não adicionar vídeo.
+
+---
+
+FASE 38 — CRITÉRIO DE CONCLUSÃO
+
+Não considere o trabalho concluído apenas porque a interface parece bonita.
+
+Uma fase somente está concluída quando:
+
+- código implementado;
+- interface funcionando;
+- navegação funcionando;
+- estados funcionando;
+- tratamento de erro implementado;
+- cleanup realizado;
+- nenhuma regressão conhecida;
+- arquitetura preparada para integração futura.
+
+Se alguma parte depender da API que ainda não existe, não simule como se fosse uma integração real.
+
+Crie a interface e a camada de serviço necessária para receber a futura implementação.
+
+---
+
+REGRA FINAL DE EXECUÇÃO
+
+A ordem é obrigatória:
+
+Fase 0
+↓
+Fase 1
+↓
+Fase 2
+↓
+Fase 3
+↓
+Fase 4
+↓
+Fase 5
+↓
+Fase 6
+↓
+Fase 7
+↓
+Fase 8
+↓
+Fase 9
+↓
+Fase 10
+↓
+Fase 11
+↓
+Fase 12
+↓
+Fase 13
+↓
+Fase 14
+↓
+Fase 15
+↓
+Fase 16
+↓
+Fase 17
+↓
+Fase 18
+↓
+Fase 19
+↓
+Fase 20
+↓
+Fase 21
+↓
+Fase 22
+↓
+Fase 23
+↓
+Fase 24
+↓
+Fase 25
+↓
+Fase 26
+↓
+Fase 27
+↓
+Fase 28
+↓
+Fase 29
+↓
+Fase 30
+↓
+Fase 31
+↓
+Fase 32
+↓
+Fase 33
+↓
+Fase 34
+↓
+Fase 35
+↓
+Fase 36
+↓
+Fase 37
+↓
+Fase 38
+
+Não pule fases.
+
+Não deixe uma fase parcialmente implementada para começar outra.
+
+Execute quantas fases conseguir com segurança em uma única chamada, mas nunca sacrifique qualidade para aumentar a quantidade.
+
+Quando não conseguir continuar com segurança:
+
+1. pare;
+2. informe onde parou;
+3. informe o que foi concluído;
+4. informe o que foi testado;
+5. informe eventuais problemas;
+6. pergunte se pode prosseguir.
+
+Ao continuar, releia este prompt e retome exatamente da fase seguinte.
+
+Não perca o contexto arquitetural definido neste documento.
+
+O objetivo final desta etapa é possuir um celular CEF moderno, organizado, responsivo e preparado para ser conectado ao RochaSystem, especialmente com uma arquitetura correta para WhatsApp, mensagens, contatos, telefone e chamadas de áudio, sem criar dependências falsas ou soluções temporárias que posteriormente precisem ser totalmente refeitas.
