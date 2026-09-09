@@ -1,0 +1,2269 @@
+ROCHASYSTEM
+
+Plataforma privada de comunicação do Rocha Roleplay
+
+Implementação de WhatsApp + Chamadas de Áudio
+
+---
+
+0. INSTRUÇÃO PRINCIPAL
+
+Você está trabalhando na construção do RochaSystem, uma infraestrutura privada pertencente ao servidor Rocha Roleplay.
+
+O objetivo deste projeto é criar uma plataforma centralizada responsável, inicialmente, pelos seguintes sistemas:
+
+- WhatsApp do celular do Rocha Roleplay;
+- mensagens em tempo real;
+- contatos compartilhados;
+- chamadas de áudio;
+- chamadas telefônicas normais;
+- chamadas de áudio do WhatsApp;
+- WebSocket;
+- WebRTC;
+- autenticação de clientes CEF;
+- persistência de dados;
+- API de integração;
+- sistema de sessões;
+- notificações relacionadas às comunicações;
+- documentação completa da API e da integração.
+
+IMPORTANTE
+
+Este projeto NÃO deve ser tratado como um simples site visual.
+
+O objetivo é construir uma infraestrutura backend real, segura, persistente, escalável e preparada para ser consumida pelo CEF integrado ao launcher/APK do Rocha Roleplay e posteriormente pela gamemode SA-MP/Pawn.
+
+A interface web existente, caso exista, deve ser utilizada quando fizer sentido, mas o foco principal deste trabalho é criar uma infraestrutura sólida para o celular do jogo.
+
+---
+
+1. NÃO RECRIE O PROJETO
+
+Antes de qualquer alteração:
+
+1. Analise completamente o projeto atual.
+2. Identifique a estrutura existente.
+3. Identifique tecnologias já utilizadas.
+4. Identifique banco de dados existente.
+5. Identifique autenticação existente.
+6. Identifique APIs existentes.
+7. Identifique componentes já implementados.
+8. Identifique configurações existentes.
+9. Identifique possíveis sistemas que já podem ser reutilizados.
+10. Identifique conflitos arquiteturais antes de alterar qualquer coisa.
+
+NÃO recrie o projeto do zero.
+
+NÃO substitua uma implementação existente simplesmente porque você prefere outra tecnologia.
+
+NÃO remova funcionalidades existentes sem necessidade.
+
+NÃO crie uma segunda implementação de algo que já existe e pode ser reutilizado.
+
+Caso seja necessário refatorar algo existente, preserve sua funcionalidade.
+
+---
+
+2. REGRA ABSOLUTA SOBRE DADOS MOCKADOS
+
+Não utilize dados mockados, fictícios ou hardcoded para simular funcionamento real quando a funcionalidade estiver sendo implementada de verdade.
+
+Não faça:
+
+João Silva
+123-456
+online
+
+simplesmente para preencher uma interface.
+
+Os dados deverão vir do backend real.
+
+Durante desenvolvimento, testes automatizados podem utilizar fixtures/test data devidamente isolados, mas isso não deve permanecer como fonte de dados da aplicação em produção.
+
+Não confunda:
+
+- mock visual;
+- teste automatizado;
+- dado real de produção.
+
+---
+
+3. FORMA OBRIGATÓRIA DE TRABALHO
+
+Este projeto deverá ser executado por FASES.
+
+NÃO tente implementar todas as fases simultaneamente.
+
+Você deverá analisar o prompt inteiro antes de começar e manter uma visão geral de todas as fases.
+
+Porém, execute as fases em lotes.
+
+Regra de lotes
+
+Em cada interação/chamada de trabalho:
+
+1. Analise novamente este prompt.
+2. Identifique exatamente em qual fase você está.
+3. Execute o maior número de fases consecutivas que você consiga implementar com qualidade nessa interação.
+4. NÃO ultrapasse uma fase parcialmente implementada.
+5. Uma fase só é considerada concluída quando todos os seus requisitos técnicos estiverem implementados.
+6. Faça testes/verificações antes de marcar a fase como concluída.
+7. Registre mentalmente/tecnicamente o progresso.
+8. Antes de iniciar o próximo lote, revise novamente o prompt completo.
+9. Nunca priorize velocidade em detrimento de integridade.
+
+Se conseguir continuar
+
+Continue automaticamente para a próxima fase, respeitando a ordem.
+
+Se chegar ao limite da interação
+
+NÃO comece uma fase nova parcialmente.
+
+Pare em um ponto seguro e pergunte:
+
+«"Concluí o lote atual e validei as fases implementadas. Posso prosseguir para as próximas fases?"»
+
+Quando eu responder que sim, continue exatamente de onde parou.
+
+NÃO reinicie fases já concluídas.
+
+NÃO refaça trabalho desnecessariamente.
+
+---
+
+4. CHECKPOINT OBRIGATÓRIO
+
+Ao terminar cada lote, faça internamente uma revisão:
+
+FASE:
+STATUS:
+IMPLEMENTAÇÃO:
+TESTES:
+PERSISTÊNCIA:
+SEGURANÇA:
+INTEGRAÇÃO:
+POSSÍVEIS REGRESSÕES:
+
+Não considere uma fase concluída somente porque a interface está funcionando.
+
+Uma funcionalidade só está pronta quando:
+
+- frontend necessário funciona;
+- backend funciona;
+- banco funciona;
+- persistência funciona;
+- autenticação funciona;
+- validação funciona;
+- tratamento de erros funciona;
+- integração funciona;
+- estados são consistentes;
+- não existem dados mockados;
+- não existem erros relacionados à implementação.
+
+---
+
+5. OBJETIVO ARQUITETURAL
+
+A arquitetura deverá ser aproximadamente:
+
+                         ROCHA ROLEPLAY
+                               │
+                     ┌─────────┴─────────┐
+                     │                   │
+                 SA-MP/Pawn             CEF
+                     │                   │
+                     │                   │
+                     └─────────┬─────────┘
+                               │
+                         ROCHASYSTEM
+                               │
+             ┌─────────────────┼─────────────────┐
+             │                 │                 │
+            API            WebSocket           WebRTC
+             │                 │                 │
+             └─────────────────┼─────────────────┘
+                               │
+                    ┌──────────┴──────────┐
+                    │                     │
+               PostgreSQL               Redis
+                    │
+                    │
+                 Storage
+
+A implementação exata pode utilizar tecnologias equivalentes caso o projeto atual já possua uma stack adequada.
+
+Não altere tecnologia apenas por preferência.
+
+---
+
+6. PRINCÍPIO FUNDAMENTAL: FONTE ÚNICA DE VERDADE
+
+Não crie bancos separados para a mesma informação.
+
+Exemplo ERRADO:
+
+WhatsAppContacts
+SMSContacts
+PhoneContacts
+
+Exemplo correto:
+
+ContactService
+
+utilizado por:
+
+WhatsApp
+Telefone
+SMS
+
+Da mesma maneira:
+
+- usuário deve possuir uma identidade;
+- telefone deve possuir uma identidade;
+- chamada deve possuir uma identidade;
+- conversa deve possuir uma identidade;
+- contato deve possuir uma identidade.
+
+---
+
+7. ESCOPO ATUAL
+
+IMPLEMENTAR AGORA
+
+WhatsApp
+
+- contatos;
+- conversas individuais;
+- mensagens;
+- envio;
+- recebimento;
+- mensagens não lidas;
+- status de entrega;
+- status de leitura;
+- online/offline;
+- indicador de digitação;
+- persistência;
+- áudio gravado;
+- envio de áudio;
+- chamadas de áudio pelo WhatsApp;
+- histórico de chamadas;
+- notificações;
+- WebSocket.
+
+Chamadas
+
+Implementar uma infraestrutura única para:
+
+PHONE
+WHATSAPP
+
+Ambos serão chamadas de áudio.
+
+IMPORTANTE
+
+O WhatsApp NÃO terá chamadas de vídeo.
+
+NÃO implemente:
+
+- vídeo;
+- câmera;
+- video stream;
+- video call.
+
+Esses sistemas serão tratados posteriormente em outro projeto/fase.
+
+---
+
+8. TIPOS DE CHAMADA
+
+O backend deverá suportar no mínimo:
+
+PHONE
+WHATSAPP
+
+PHONE
+
+Representa uma chamada telefônica normal.
+
+WHATSAPP
+
+Representa uma chamada de áudio feita através do WhatsApp.
+
+Ambos devem utilizar o mesmo núcleo de chamadas.
+
+Não crie dois sistemas completamente independentes.
+
+---
+
+9. CALL SERVICE
+
+Criar uma abstração equivalente a:
+
+CallService
+
+Ela deverá ser responsável pelo ciclo de vida da chamada.
+
+Modelo conceitual:
+
+Call
+├── id
+├── type
+├── callerId
+├── receiverId
+├── status
+├── createdAt
+├── answeredAt
+├── connectedAt
+├── endedAt
+└── duration
+
+Os nomes podem ser adaptados à arquitetura real.
+
+---
+
+10. ESTADOS DAS CHAMADAS
+
+Suportar estados equivalentes a:
+
+RINGING
+ACCEPTED
+CONNECTING
+CONNECTED
+REJECTED
+MISSED
+ENDED
+FAILED
+CANCELLED
+
+O backend deve impedir transições inválidas.
+
+Exemplo:
+
+ENDED → ACCEPTED
+
+não pode acontecer.
+
+Criar uma máquina de estados coerente.
+
+---
+
+11. CRIAÇÃO DE CHAMADA
+
+A API deverá permitir algo equivalente a:
+
+POST /api/v1/calls
+
+Com:
+
+{
+  "type": "WHATSAPP",
+  "target": "123456"
+}
+
+ou:
+
+{
+  "type": "PHONE",
+  "target": "123456"
+}
+
+O formato final pode ser adaptado.
+
+O backend deve:
+
+1. autenticar o solicitante;
+2. identificar o jogador real;
+3. validar o número;
+4. encontrar o destinatário;
+5. verificar se o destinatário pode receber chamadas;
+6. verificar se já existe chamada conflitante;
+7. criar o registro da chamada;
+8. gerar um ID único;
+9. notificar o destinatário;
+10. iniciar o processo de sinalização.
+
+---
+
+12. REGRAS DE ELEGIBILIDADE
+
+NÃO codifique regras específicas de RP diretamente no núcleo.
+
+No futuro, a gamemode poderá determinar:
+
+Telefone
+
+- possui créditos?
+- telefone habilitado?
+- está sem sinal?
+- está bloqueado?
+- está em alguma situação especial?
+
+WhatsApp
+
+- possui internet?
+- aplicativo disponível?
+- conta ativa?
+- outras regras de RP?
+
+O CallService deverá permitir que essas regras sejam consultadas por uma camada de autorização/policy.
+
+Exemplo conceitual:
+
+CallPolicy
+├── canCall
+├── reason
+└── metadata
+
+Hoje, não invente essas regras.
+
+A arquitetura apenas deve estar preparada para recebê-las posteriormente.
+
+---
+
+13. WEBRTC
+
+Utilize WebRTC para transportar o áudio da chamada.
+
+O backend NÃO deve ser utilizado como simples túnel de todo o áudio caso WebRTC permita conexão direta.
+
+O backend deverá cuidar principalmente de:
+
+- autenticação;
+- sinalização;
+- sessão;
+- identificação;
+- estado;
+- autorização;
+- controle da chamada.
+
+WebRTC deverá cuidar da transmissão de áudio entre os clientes.
+
+---
+
+14. SINALIZAÇÃO WEBRTC
+
+Criar infraestrutura de sinalização para:
+
+offer
+answer
+ICE candidates
+call session
+
+A sinalização deverá ocorrer através do backend/WebSocket conforme a arquitetura escolhida.
+
+NÃO exponha informações internas desnecessárias.
+
+NÃO permita que um jogador envie sinalização para uma chamada que não pertence a ele.
+
+---
+
+15. STUN / TURN
+
+A arquitetura deverá estar preparada para NAT traversal.
+
+Avalie a necessidade de:
+
+STUN
+TURN
+
+Caso TURN seja necessário para confiabilidade das chamadas, documente e prepare sua utilização.
+
+Não presuma que todos os jogadores conseguirão estabelecer conexão direta.
+
+A solução deve considerar redes restritivas.
+
+---
+
+16. WEBSOCKET
+
+Implementar WebSocket para eventos em tempo real.
+
+O sistema deverá suportar eventos equivalentes a:
+
+CALL_INCOMING
+CALL_ACCEPTED
+CALL_REJECTED
+CALL_CANCELLED
+CALL_CONNECTED
+CALL_ENDED
+CALL_FAILED
+CALL_MISSED
+
+MESSAGE_NEW
+MESSAGE_DELIVERED
+MESSAGE_READ
+
+USER_ONLINE
+USER_OFFLINE
+
+USER_TYPING
+USER_STOPPED_TYPING
+
+Os nomes podem ser ajustados, mas a semântica deve ser preservada.
+
+---
+
+17. AUTENTICAÇÃO DO CEF
+
+O CEF não deve simplesmente informar:
+
+playerId = 123
+
+e ser considerado autenticado.
+
+A arquitetura deverá possuir autenticação segura.
+
+Fluxo conceitual:
+
+SA-MP
+ ↓
+identificação do jogador
+ ↓
+credencial/token temporário
+ ↓
+CEF
+ ↓
+RochaSystem
+ ↓
+sessão autenticada
+
+O backend deve saber qual jogador está conectado.
+
+Não confie em IDs enviados livremente pelo frontend.
+
+---
+
+18. SESSÕES
+
+Criar sistema de sessão.
+
+Cada conexão CEF deverá possuir:
+
+sessionId
+userId
+deviceId, se aplicável
+createdAt
+expiresAt
+status
+
+As sessões devem poder ser invalidadas.
+
+Ao desconectar:
+
+- atualizar presença;
+- encerrar conexões necessárias;
+- limpar estados temporários;
+- não apagar dados persistentes.
+
+---
+
+19. SEGURANÇA
+
+Aplicar:
+
+- autenticação;
+- autorização;
+- validação de payload;
+- rate limiting;
+- proteção contra spam;
+- proteção contra chamadas abusivas;
+- proteção contra acesso de dados de outros jogadores;
+- validação de ownership;
+- expiração de sessão;
+- proteção de endpoints;
+- secrets somente no backend;
+- logs de segurança.
+
+Nunca colocar:
+
+- database credentials;
+- API secrets;
+- tokens privados;
+- chaves administrativas;
+
+no JavaScript executado pelo CEF.
+
+---
+
+20. PRESENÇA ONLINE
+
+Implementar presença em tempo real.
+
+Estados conceituais:
+
+ONLINE
+OFFLINE
+
+O sistema pode futuramente suportar:
+
+BUSY
+AWAY
+
+mas não é obrigatório agora.
+
+Presença não deve depender exclusivamente de um valor persistido no banco.
+
+Utilize estado em tempo real/cache quando apropriado.
+
+---
+
+21. CONTATOS
+
+Criar um ContactService centralizado.
+
+Um contato deve possuir no mínimo:
+
+id
+ownerId
+phoneNumber
+firstName
+lastName
+avatar
+createdAt
+updatedAt
+
+Campos opcionais devem continuar opcionais.
+
+---
+
+22. CONTATOS SÃO GLOBAIS PARA O CELULAR
+
+Um contato criado pelo WhatsApp deve estar disponível para:
+
+WhatsApp
+Telefone
+SMS
+
+quando esses aplicativos forem integrados.
+
+Não crie uma agenda independente do WhatsApp.
+
+---
+
+23. NÚMEROS TELEFÔNICOS
+
+Internamente, prefira armazenar:
+
+123456
+
+Visualmente:
+
+123-456
+
+Criar uma função/utilidade única equivalente a:
+
+formatPhoneNumber()
+normalizePhoneNumber()
+validatePhoneNumber()
+
+Não implemente a formatação individualmente em cada aplicativo.
+
+---
+
+24. WHATSAPP — ESTRUTURA
+
+O WhatsApp deverá possuir:
+
+WhatsApp
+├── Conversas
+├── Contatos
+├── Perfil
+├── Configurações relacionadas
+└── Chamadas
+
+Não transforme páginas inteiras em modais.
+
+Modais devem ser utilizados para:
+
+- confirmação;
+- alertas;
+- pequenas ações;
+- menus contextuais.
+
+Telas completas devem possuir navegação própria.
+
+---
+
+25. CONVERSAS
+
+Uma conversa individual deve possuir ID estável.
+
+Não gere um ID diferente a cada carregamento.
+
+Exemplo:
+
+conversationId
+participantA
+participantB
+createdAt
+updatedAt
+
+A mesma conversa entre duas pessoas deve continuar sendo a mesma conversa.
+
+---
+
+26. MENSAGENS
+
+Cada mensagem deverá possuir informações equivalentes a:
+
+id
+conversationId
+senderId
+receiverId
+type
+content
+createdAt
+deliveredAt
+readAt
+
+Tipos podem incluir:
+
+TEXT
+AUDIO
+
+Preparar arquitetura para expansão futura, sem implementar funcionalidades desnecessárias agora.
+
+---
+
+27. ENVIO DE MENSAGEM
+
+Fluxo:
+
+CEF A
+ ↓
+WebSocket/API
+ ↓
+Backend
+ ↓
+validação
+ ↓
+persistência
+ ↓
+notificação CEF B
+ ↓
+atualização da conversa
+
+Não considere a mensagem enviada apenas porque a interface mudou.
+
+Primeiro confirme processamento adequado pelo backend.
+
+---
+
+28. MENSAGENS NÃO LIDAS
+
+Implementar contador de mensagens não lidas.
+
+Exemplo:
+
+WhatsApp
+   └── João
+       └── 3 mensagens não lidas
+
+Ao abrir/ler a conversa:
+
+MESSAGE_READ
+
+deve atualizar o estado.
+
+---
+
+29. ENTREGA E LEITURA
+
+Suportar estados equivalentes a:
+
+SENT
+DELIVERED
+READ
+
+O frontend deverá refletir o estado real.
+
+Não mostre "lida" se o backend não recebeu confirmação correspondente.
+
+---
+
+30. DIGITAÇÃO
+
+Implementar:
+
+USER_TYPING
+USER_STOPPED_TYPING
+
+Esses estados são temporários.
+
+Não precisam ser persistidos como mensagens.
+
+Evitar spam de eventos.
+
+Utilizar debounce/throttle apropriado.
+
+---
+
+31. ÁUDIO DO WHATSAPP
+
+Implementar mensagens de áudio gravadas.
+
+O fluxo deverá ser:
+
+CEF
+ ↓
+microfone
+ ↓
+gravação
+ ↓
+arquivo de áudio
+ ↓
+upload
+ ↓
+Storage
+ ↓
+registro da mensagem
+ ↓
+destinatário
+
+Não armazenar arquivos grandes diretamente no banco.
+
+Banco deve armazenar metadados/referência.
+
+---
+
+32. STORAGE
+
+Criar abstração equivalente a:
+
+StorageService
+
+Responsável pelos arquivos.
+
+Exemplo conceitual:
+
+/users/{userId}/whatsapp/audio/{fileId}
+
+O caminho real pode ser diferente.
+
+Não permita que um jogador acesse arbitrariamente arquivos pertencentes a outro.
+
+---
+
+33. ÁUDIO — VALIDAÇÃO
+
+Validar:
+
+- MIME type;
+- tamanho;
+- extensão;
+- duração, quando possível;
+- autenticação;
+- ownership.
+
+Impedir upload de arquivos arbitrários perigosos.
+
+Definir limites razoáveis.
+
+Não aceitar tamanho ilimitado.
+
+---
+
+34. CHAMADA DE ÁUDIO PELO WHATSAPP
+
+No WhatsApp:
+
+Conversa
+ ↓
+botão de chamada
+ ↓
+CallService
+ ↓
+type = WHATSAPP
+ ↓
+destinatário
+ ↓
+CALL_INCOMING
+ ↓
+aceitar
+ ↓
+WebRTC
+ ↓
+áudio
+
+WhatsApp deve ser AUDIO ONLY.
+
+---
+
+35. CHAMADA TELEFÔNICA
+
+O aplicativo Telefone deverá utilizar:
+
+type = PHONE
+
+e o mesmo CallService.
+
+Não crie uma infraestrutura separada.
+
+As regras específicas de crédito/sinal/etc. serão integradas futuramente.
+
+---
+
+36. INTERFACE DE CHAMADA
+
+A interface deve mostrar:
+
+- nome do contato/jogador;
+- número;
+- tipo de chamada;
+- estado;
+- duração quando conectada;
+- botão de mute;
+- botão de encerrar.
+
+Estados visuais:
+
+Chamando...
+Recebendo chamada...
+Conectando...
+Conectado
+Chamada encerrada
+Chamada perdida
+
+---
+
+37. MUTE
+
+Implementar mute/unmute.
+
+Ao pressionar:
+
+Mute
+
+o microfone do usuário deverá ser desativado.
+
+Ao pressionar novamente:
+
+Unmute
+
+o microfone deverá voltar.
+
+Preferencialmente isso deverá ocorrer no cliente através do estado da faixa de áudio/WebRTC, sem necessidade de transmitir áudio ao backend.
+
+O estado visual deve acompanhar o estado real.
+
+Exemplo:
+
+microphone.enabled = false
+
+ou equivalente à implementação utilizada.
+
+---
+
+38. MUTE NÃO ENCERRA CHAMADA
+
+Ao mutar:
+
+- chamada continua conectada;
+- áudio recebido continua funcionando;
+- somente o microfone local é silenciado.
+
+Não alterar o estado da chamada para "ENDED".
+
+---
+
+39. CHAMADA RECEBIDA
+
+Quando B receber uma chamada:
+
+CALL_INCOMING
+
+mostrar:
+
+Nome
+Número
+
+Chamada de voz
+
+[Recusar]
+[Aceitar]
+
+Se aceitar:
+
+ACCEPTED
+CONNECTING
+CONNECTED
+
+Se recusar:
+
+REJECTED
+
+Se ninguém atender:
+
+MISSED
+
+---
+
+40. ENCERRAMENTO
+
+Qualquer participante poderá encerrar.
+
+Ao encerrar:
+
+ENDED
+
+deve ser propagado ao outro participante.
+
+A conexão WebRTC deve ser encerrada corretamente.
+
+Timers devem ser removidos.
+
+Listeners devem ser removidos.
+
+Streams devem ser liberados.
+
+Não deixar microfone ativo depois do encerramento.
+
+---
+
+41. RECONEXÃO
+
+O sistema deverá considerar:
+
+- perda temporária do WebSocket;
+- reconexão;
+- queda do CEF;
+- fechamento do aplicativo;
+- jogador desconectando do servidor;
+- chamada sendo encerrada inesperadamente.
+
+Evitar chamadas "fantasmas".
+
+Exemplo:
+
+CEF fecha durante chamada.
+
+O backend deve eventualmente reconhecer a perda de conexão e finalizar a chamada corretamente.
+
+---
+
+42. HISTÓRICO DE CHAMADAS
+
+Registrar chamadas quando necessário.
+
+Exemplo:
+
+callId
+type
+caller
+receiver
+status
+createdAt
+duration
+
+O WhatsApp poderá mostrar:
+
+📞 Chamada de voz
+2 min 31 s
+
+O telefone poderá futuramente usar o mesmo histórico.
+
+Não crie dois sistemas independentes.
+
+---
+
+43. NOTIFICAÇÕES
+
+Chamadas recebidas devem gerar evento/notificação apropriada.
+
+Exemplos:
+
+Chamada recebida
+Chamada perdida
+Nova mensagem
+Nova mensagem de áudio
+
+Não crie um sistema paralelo de notificações se o Rocha Roleplay já possuir um.
+
+Criar integração com o sistema existente quando possível.
+
+---
+
+44. BANCO DE DADOS
+
+Utilizar o banco já existente se houver.
+
+Caso não exista uma estrutura adequada, implementar banco relacional apropriado.
+
+Entidades conceituais:
+
+users
+sessions
+devices
+contacts
+conversations
+conversation_participants
+messages
+message_reads
+calls
+call_participants
+presence
+
+A nomenclatura final pode ser diferente.
+
+O importante é que o modelo seja normalizado e coerente.
+
+---
+
+45. ÍNDICES
+
+Adicionar índices adequados para:
+
+- número telefônico;
+- ownerId;
+- conversationId;
+- senderId;
+- receiverId;
+- createdAt;
+- status;
+- chamadas ativas;
+- mensagens recentes.
+
+Não crie índices desnecessários.
+
+---
+
+46. ISOLAMENTO DE DADOS
+
+Jogador A nunca pode consultar:
+
+contatos de B
+mensagens de B
+chamadas de B
+áudios de B
+sessões de B
+
+a menos que exista uma relação explícita autorizando.
+
+Toda consulta deve verificar ownership/permission.
+
+Não confiar apenas no frontend.
+
+---
+
+47. RATE LIMIT
+
+Criar limites para evitar abuso.
+
+Exemplos:
+
+- criação de chamadas;
+- envio de mensagens;
+- envio de áudio;
+- eventos de digitação;
+- requests de API;
+- conexão WebSocket.
+
+Os limites devem ser razoáveis e configuráveis.
+
+Não bloquear usuários legítimos desnecessariamente.
+
+---
+
+48. LOGS
+
+Registrar erros importantes.
+
+Exemplos:
+
+CALL_CREATE_FAILED
+CALL_AUTHORIZATION_FAILED
+WEBRTC_SIGNALING_ERROR
+MESSAGE_SEND_FAILED
+AUDIO_UPLOAD_FAILED
+SESSION_INVALID
+
+Os logs não devem conter:
+
+- senhas;
+- tokens privados;
+- secrets;
+- dados sensíveis desnecessários.
+
+---
+
+49. TRATAMENTO DE ERROS
+
+Nunca deixar:
+
+Erro.
+
+como única resposta quando uma mensagem melhor for possível.
+
+Exemplos:
+
+Número não encontrado.
+Usuário está indisponível.
+Você já está em uma chamada.
+Esta chamada não está mais disponível.
+Não foi possível conectar a chamada.
+Sua sessão expirou.
+Não foi possível enviar a mensagem.
+Não foi possível enviar o áudio.
+
+Frontend nunca deve receber stack trace.
+
+---
+
+50. LOADING
+
+Nenhuma operação deverá deixar:
+
+loading infinito
+
+Implementar timeout/falha quando apropriado.
+
+Sempre possuir estado:
+
+loading
+success
+error
+
+---
+
+51. CONCORRÊNCIA
+
+Considerar situações como:
+
+- dois jogadores ligando simultaneamente;
+- usuário recebendo duas chamadas;
+- mesma mensagem sendo enviada duas vezes;
+- WebSocket reconectando;
+- evento duplicado;
+- dois dispositivos tentando modificar o mesmo estado.
+
+Criar mecanismos de idempotência quando necessário.
+
+---
+
+52. DUPLICAÇÃO DE EVENTOS
+
+WebSocket pode receber eventos repetidos em determinadas condições.
+
+O cliente não deve criar duas mensagens ou duas chamadas visuais apenas porque recebeu o mesmo evento duas vezes.
+
+Usar IDs únicos e deduplicação.
+
+---
+
+53. PERSISTÊNCIA
+
+Dados permanentes não podem desaparecer quando:
+
+- jogador fecha o celular;
+- CEF fecha;
+- jogador desconecta;
+- servidor reinicia.
+
+Devem continuar persistidos:
+
+- contatos;
+- conversas;
+- mensagens;
+- histórico necessário;
+- configurações relacionadas;
+- chamadas/histórico quando aplicável.
+
+Estados temporários como:
+
+typing
+online
+ringing
+
+não devem ser tratados da mesma forma que dados permanentes.
+
+---
+
+54. RETENÇÃO DE MENSAGENS
+
+Evitar crescimento infinito sem controle.
+
+Criar política configurável de retenção.
+
+O sistema deve ser projetado para suportar limpeza/arquivamento posteriormente.
+
+NÃO apague mensagens arbitrariamente sem uma política definida.
+
+Não copiar cegamente a política antiga de "200 → 15" para o RochaSystem.
+
+Aqui o banco permite uma estratégia melhor.
+
+---
+
+55. API
+
+Criar uma API organizada e versionada.
+
+Exemplo:
+
+/api/v1/
+
+Estrutura conceitual:
+
+/auth
+/sessions
+/users
+/contacts
+
+/whatsapp
+/whatsapp/conversations
+/whatsapp/messages
+/whatsapp/audio
+
+/calls
+/calls/:id
+
+/presence
+
+WebSocket:
+
+/ws
+
+A estrutura final pode ser diferente, desde que documentada.
+
+---
+
+56. API DOCUMENTADA
+
+Documentar:
+
+- endpoint;
+- método;
+- autenticação;
+- parâmetros;
+- body;
+- resposta;
+- erros;
+- permissões;
+- exemplos.
+
+Se possível, gerar documentação OpenAPI/Swagger.
+
+A documentação deve ser mantida junto do código.
+
+---
+
+57. DOCUMENTO DE INTEGRAÇÃO
+
+Criar no projeto um documento:
+
+ROCHASYSTEM_INTEGRATION.md
+
+Esse documento será posteriormente entregue a outra IA que terá acesso aos arquivos da:
+
+- gamemode;
+- Pawn;
+- APK;
+- Launcher;
+- CEF.
+
+Esse documento deve explicar exatamente como integrar o RochaSystem.
+
+---
+
+58. CONTEÚDO DO ROCHASYSTEM_INTEGRATION.MD
+
+O documento deve conter:
+
+1. Visão geral
+2. Arquitetura
+3. Identidade do jogador
+4. Autenticação
+5. Sessões
+6. CEF
+7. API
+8. WebSocket
+9. Eventos
+10. Contatos
+11. WhatsApp
+12. Mensagens
+13. Áudios
+14. Chamadas
+15. PHONE
+16. WHATSAPP
+17. WebRTC
+18. Mute
+19. Estados
+20. Erros
+21. Segurança
+22. Rate limits
+23. Exemplos de requisições
+24. Exemplos de respostas
+25. Exemplos de eventos
+26. Como a gamemode deverá consultar autorização
+27. Como a gamemode poderá futuramente aplicar regras
+28. Checklist de integração
+
+---
+
+59. FUTURA INTEGRAÇÃO COM A GAMEMODE
+
+Documentar claramente que futuramente a gamemode poderá controlar regras como:
+
+PHONE
+- crédito;
+- sinal;
+- disponibilidade;
+- permissões.
+
+WHATSAPP
+- internet;
+- disponibilidade;
+- permissões.
+
+O backend não deve assumir essas regras como definitivas agora.
+
+---
+
+60. SEPARAÇÃO ENTRE INFRAESTRUTURA E REGRAS DE RP
+
+Esta regra é fundamental.
+
+O RochaSystem fornece:
+
+identidade
+mensagens
+contatos
+chamadas
+WebSocket
+WebRTC
+persistência
+storage
+
+A gamemode poderá fornecer:
+
+regras de RP
+economia
+créditos
+internet
+sinal
+estado do personagem
+permissões específicas
+
+Não misture as duas responsabilidades sem necessidade.
+
+---
+
+61. FRONTEND / CEF
+
+A implementação deverá ser compatível com um ambiente CEF.
+
+Evite depender de APIs modernas que possam não existir na versão do Chromium utilizada pelo launcher sem antes verificar compatibilidade.
+
+Documente qualquer requisito específico.
+
+---
+
+62. WEBRTC NO CEF
+
+Verificar cuidadosamente:
+
+- suporte a getUserMedia;
+- permissões de microfone;
+- MediaStream;
+- RTCPeerConnection;
+- ICE;
+- codecs suportados;
+- autoplay/políticas de áudio;
+- permissões do CEF.
+
+Não assumir suporte apenas porque funciona em Chrome atual.
+
+Caso alguma funcionalidade dependa de configuração do CEF/launcher, documentar isso no:
+
+ROCHASYSTEM_INTEGRATION.md
+
+---
+
+63. PRIVACIDADE
+
+O RochaSystem é uma infraestrutura privada.
+
+Não criar:
+
+- página pública de cadastro;
+- perfil público;
+- indexação;
+- exposição pública de mensagens;
+- acesso público a arquivos;
+- endpoints administrativos sem autenticação.
+
+O sistema deve ser pensado como infraestrutura interna do Rocha Roleplay.
+
+---
+
+64. ADMINISTRAÇÃO
+
+Se for necessário criar uma interface administrativa para desenvolvimento, ela deverá ser protegida.
+
+Não deixar:
+
+/admin
+
+aberto sem autenticação.
+
+Não colocar funções perigosas diretamente no frontend.
+
+---
+
+65. VARIÁVEIS DE AMBIENTE
+
+Segredos deverão utilizar variáveis de ambiente/secrets.
+
+Exemplos:
+
+DATABASE_URL
+REDIS_URL
+JWT_SECRET
+TURN_SECRET
+STORAGE_ACCESS_KEY
+STORAGE_SECRET_KEY
+
+Os nomes são apenas exemplos.
+
+Nunca commitar secrets.
+
+Nunca colocar secrets no CEF.
+
+---
+
+66. DESENVOLVIMENTO E PRODUÇÃO
+
+Separar adequadamente:
+
+development
+test
+production
+
+Não misturar banco de testes com produção.
+
+Não executar migrações destrutivas automaticamente sem segurança.
+
+---
+
+67. MIGRAÇÕES
+
+Se utilizar banco com migrations:
+
+- criar migrations versionadas;
+- não alterar produção manualmente sem controle;
+- não apagar dados em migrations sem necessidade;
+- documentar mudanças de schema.
+
+---
+
+68. TESTES
+
+Criar testes para os pontos críticos.
+
+Principalmente:
+
+Autenticação
+
+- sessão válida;
+- sessão inválida;
+- sessão expirada.
+
+Contatos
+
+- criar;
+- editar;
+- excluir;
+- isolamento.
+
+Mensagens
+
+- enviar;
+- receber;
+- leitura;
+- duplicação.
+
+Chamadas
+
+- criar;
+- aceitar;
+- recusar;
+- perder;
+- encerrar;
+- chamadas simultâneas;
+- autorização.
+
+Mute
+
+- ativar;
+- desativar;
+- chamada continuar funcionando.
+
+Segurança
+
+- jogador A tentando acessar dados B;
+- jogador A tentando controlar chamada B;
+- upload não autorizado.
+
+---
+
+69. TESTE DE ISOLAMENTO
+
+Criar pelo menos dois usuários de teste:
+
+USER_A
+USER_B
+
+Validar:
+
+A não consegue:
+
+ler mensagens de B;
+ler contatos de B;
+acessar áudio de B;
+encerrar chamada de B;
+alterar dados de B.
+
+B também não consegue acessar dados de A.
+
+---
+
+70. TESTE DE CHAMADA
+
+Testar:
+
+A liga para B
+B recebe
+B aceita
+WebRTC conecta
+A fala
+B recebe
+B fala
+A recebe
+A ativa mute
+B não recebe áudio de A
+A continua ouvindo B
+A desativa mute
+áudio volta
+B encerra
+A recebe encerramento
+
+---
+
+71. TESTE DE CHAMADA RECUSADA
+
+A liga
+B recebe
+B recusa
+A recebe REJECTED
+chamada finalizada
+nenhum microfone fica ativo
+
+---
+
+72. TESTE DE CHAMADA PERDIDA
+
+A liga
+B não atende
+timeout
+MISSED
+histórico atualizado
+
+---
+
+73. TESTE DE DESCONEXÃO
+
+Testar:
+
+CEF A fecha
+CEF B continua conectado
+
+A chamada deve ser encerrada adequadamente.
+
+Testar também:
+
+WebSocket desconecta
+WebSocket reconecta
+
+Não criar chamada duplicada.
+
+---
+
+74. TESTE DE MÚLTIPLAS CHAMADAS
+
+Impedir estados inconsistentes.
+
+Exemplo:
+
+A está em chamada com B
+A tenta ligar para C
+
+O sistema deverá responder adequadamente.
+
+Não criar três chamadas simultâneas se essa não for uma regra suportada.
+
+A arquitetura deve deixar essa política configurável.
+
+---
+
+75. UX
+
+Não construir apenas backend.
+
+Quando houver frontend envolvido, manter:
+
+- feedback imediato;
+- estados claros;
+- animações discretas;
+- acessibilidade básica;
+- botões claramente identificáveis;
+- tratamento de erro;
+- estados vazios;
+- loading.
+
+Não exagerar em animações.
+
+---
+
+76. RESPONSIVIDADE
+
+O frontend do RochaSystem deve funcionar corretamente em:
+
+- desktop;
+- telas pequenas;
+- CEF;
+- diferentes resoluções.
+
+Não criar interface que dependa de resolução fixa.
+
+---
+
+77. PERFORMANCE
+
+Evitar:
+
+- polling excessivo;
+- timers desnecessários;
+- listeners duplicados;
+- consultas repetitivas;
+- renders desnecessários;
+- downloads repetidos;
+- conexões WebSocket duplicadas.
+
+Para dados em tempo real, priorizar WebSocket.
+
+---
+
+78. CACHE
+
+Redis pode ser utilizado para:
+
+- presença;
+- sessões temporárias;
+- chamadas ativas;
+- rate limits;
+- estado temporário.
+
+Não use Redis como substituto do armazenamento permanente sem justificativa.
+
+---
+
+79. BANCO VS REDIS
+
+Regra:
+
+PostgreSQL
+
+Dados permanentes.
+
+Redis
+
+Dados temporários/cache.
+
+Storage
+
+Arquivos.
+
+WebSocket
+
+Eventos em tempo real.
+
+WebRTC
+
+Áudio em tempo real.
+
+---
+
+80. NÃO DUPLICAR RESPONSABILIDADES
+
+Evitar:
+
+PostgreSQL transmitindo áudio
+Redis armazenando mensagens permanentemente
+CEF decidindo autorização
+Frontend decidindo quem pode ligar
+
+Cada componente deve possuir sua responsabilidade.
+
+---
+
+81. ARQUITETURA MODULAR
+
+Preferir módulos equivalentes a:
+
+AuthService
+SessionService
+UserService
+ContactService
+WhatsAppService
+MessageService
+CallService
+PresenceService
+NotificationService
+StorageService
+WebSocketService
+WebRTCSignalingService
+
+Não é obrigatório usar exatamente esses nomes.
+
+O princípio arquitetural é o importante.
+
+---
+
+82. REUTILIZAÇÃO
+
+Telefone e WhatsApp devem reutilizar:
+
+CallService
+WebSocketService
+WebRTCSignalingService
+ContactService
+UserService
+NotificationService
+
+Não duplicar lógica.
+
+---
+
+83. PREPARAÇÃO PARA FUTURO
+
+Embora o escopo atual seja somente áudio, estruturar o sistema para permitir expansão futura.
+
+Porém:
+
+NÃO IMPLEMENTAR AGORA:
+
+- video call;
+- câmera;
+- galeria;
+- stories;
+- chamadas em grupo;
+- compartilhamento de tela;
+- outras funções não solicitadas.
+
+Apenas garantir que a arquitetura não impeça essas extensões futuramente.
+
+---
+
+84. O QUE NÃO FAZER
+
+NÃO:
+
+- recriar o projeto;
+- apagar sistemas existentes;
+- usar dados fictícios;
+- criar dois bancos para contatos;
+- criar dois CallServices;
+- implementar vídeo;
+- implementar câmera;
+- implementar galeria;
+- colocar secrets no frontend;
+- confiar em playerId enviado pelo CEF;
+- armazenar áudio diretamente no banco;
+- criar endpoints sem autenticação;
+- deixar chamadas fantasmas;
+- deixar microfone ativo depois da chamada;
+- deixar listeners duplicados;
+- deixar timers rodando após desmontar componentes;
+- implementar regras de RP rígidas dentro do backend sem integração com a gamemode;
+- considerar a interface pronta como sistema pronto.
+
+---
+
+85. DOCUMENTAÇÃO FINAL
+
+Ao finalizar as fases, atualizar:
+
+README.md
+ROCHASYSTEM_INTEGRATION.md
+API.md
+
+ou estruturas equivalentes já existentes.
+
+A documentação deve refletir o código real.
+
+Não documentar endpoints que não existem.
+
+Não documentar funcionalidades que não funcionam.
+
+---
+
+86. CHECKLIST FINAL
+
+Antes de considerar o projeto concluído, verificar:
+
+Backend
+
+- [ ] autenticação;
+- [ ] sessões;
+- [ ] usuários;
+- [ ] contatos;
+- [ ] mensagens;
+- [ ] áudio;
+- [ ] chamadas;
+- [ ] presença;
+- [ ] WebSocket;
+- [ ] WebRTC;
+- [ ] storage;
+- [ ] segurança;
+- [ ] rate limiting;
+- [ ] logs;
+- [ ] tratamento de erros.
+
+WhatsApp
+
+- [ ] conversas;
+- [ ] contatos;
+- [ ] mensagens;
+- [ ] mensagens não lidas;
+- [ ] entregue;
+- [ ] lida;
+- [ ] digitando;
+- [ ] áudio;
+- [ ] chamada de áudio;
+- [ ] histórico;
+- [ ] persistência.
+
+Chamadas
+
+- [ ] PHONE;
+- [ ] WHATSAPP;
+- [ ] criação;
+- [ ] recebimento;
+- [ ] aceitar;
+- [ ] recusar;
+- [ ] perdida;
+- [ ] conectar;
+- [ ] encerrar;
+- [ ] WebRTC;
+- [ ] mute;
+- [ ] unmute;
+- [ ] desconexão;
+- [ ] reconexão;
+- [ ] histórico.
+
+Segurança
+
+- [ ] autenticação;
+- [ ] autorização;
+- [ ] isolamento;
+- [ ] rate limit;
+- [ ] secrets;
+- [ ] validação;
+- [ ] storage privado.
+
+Documentação
+
+- [ ] API;
+- [ ] WebSocket;
+- [ ] WebRTC;
+- [ ] autenticação;
+- [ ] CEF;
+- [ ] gamemode;
+- [ ] eventos;
+- [ ] erros;
+- [ ] integração.
+
+---
+
+87. ORDEM DAS FASES
+
+A execução deve seguir obrigatoriamente esta ordem:
+
+FASE 0
+Análise completa do projeto atual
+
+↓
+
+FASE 1
+Arquitetura base do RochaSystem
+
+↓
+
+FASE 2
+Banco de dados e migrations
+
+↓
+
+FASE 3
+Autenticação e sessões
+
+↓
+
+FASE 4
+API base
+
+↓
+
+FASE 5
+WebSocket
+
+↓
+
+FASE 6
+Usuários, identidade e números
+
+↓
+
+FASE 7
+ContactService
+
+↓
+
+FASE 8
+WhatsApp — conversas
+
+↓
+
+FASE 9
+WhatsApp — mensagens
+
+↓
+
+FASE 10
+Mensagens em tempo real
+
+↓
+
+FASE 11
+Status online/digitando/entrega/leitura
+
+↓
+
+FASE 12
+Áudios do WhatsApp
+
+↓
+
+FASE 13
+CallService
+
+↓
+
+FASE 14
+PHONE
+
+↓
+
+FASE 15
+WHATSAPP CALL
+
+↓
+
+FASE 16
+WebRTC Signaling
+
+↓
+
+FASE 17
+Conexão de áudio
+
+↓
+
+FASE 18
+Mute/Unmute
+
+↓
+
+FASE 19
+Estados, encerramento e desconexão
+
+↓
+
+FASE 20
+Histórico de chamadas
+
+↓
+
+FASE 21
+Segurança e rate limiting
+
+↓
+
+FASE 22
+Persistência e otimização
+
+↓
+
+FASE 23
+Testes automatizados
+
+↓
+
+FASE 24
+Testes de integração
+
+↓
+
+FASE 25
+Documentação
+
+↓
+
+FASE 26
+Auditoria final
+
+
+---
+
+88. FASE 0 — ANÁLISE
+
+Antes de modificar qualquer arquivo:
+
+Analise o projeto inteiro.
+
+Identifique:
+
+- framework;
+- backend;
+- frontend;
+- banco;
+- autenticação;
+- APIs;
+- estrutura de pastas;
+- variáveis de ambiente;
+- dependências;
+- serviços existentes;
+- integrações;
+- limitações do ambiente.
+
+Não implemente nada antes dessa análise.
+
+---
+
+89. FASES SEGUINTES
+
+Em cada fase:
+
+1. leia este prompt novamente;
+2. identifique requisitos da fase;
+3. analise o código relacionado;
+4. implemente;
+5. teste;
+6. revise;
+7. procure regressões;
+8. marque a fase como concluída;
+9. só então avance.
+
+Se uma fase depender de informação que somente poderá ser obtida através dos arquivos do launcher, APK ou gamemode, não invente.
+
+Documente a dependência e crie a interface de integração necessária.
+
+---
+
+90. REGRA FINAL DE CONTINUIDADE
+
+Nunca diga:
+
+«"Pronto"»
+
+simplesmente porque criou os arquivos.
+
+Antes de concluir qualquer lote, verifique se aquilo realmente funciona.
+
+Se a próxima fase puder ser implementada com segurança dentro da mesma interação, continue.
+
+Se não puder continuar devido ao limite da interação, pare no último ponto seguro e pergunte se pode prosseguir.
+
+Ao receber autorização para continuar:
+
+- releia este prompt;
+- verifique o que já foi concluído;
+- continue da próxima fase;
+- não refaça trabalho já concluído;
+- não pule etapas.
+
+---
+
+91. RESULTADO FINAL ESPERADO
+
+Ao final deste projeto deverá existir uma infraestrutura chamada:
+
+RochaSystem
+
+responsável por fornecer ao Rocha Roleplay uma plataforma privada e real de comunicação.
+
+Ela deverá permitir:
+
+CEF
+ │
+ ▼
+RochaSystem
+ │
+ ├── WhatsApp
+ │    ├── Contatos
+ │    ├── Conversas
+ │    ├── Mensagens
+ │    ├── Áudios
+ │    └── Chamadas
+ │
+ ├── Phone
+ │    └── Chamadas
+ │
+ ├── WebSocket
+ │
+ ├── WebRTC
+ │
+ ├── API
+ │
+ ├── PostgreSQL
+ │
+ ├── Redis
+ │
+ └── Storage
+
+As chamadas:
+
+PHONE
+WHATSAPP
+
+devem compartilhar o mesmo núcleo técnico.
+
+Ambas devem ser:
+
+AUDIO ONLY
+
+e suportar:
+
+RINGING
+ACCEPTED
+CONNECTING
+CONNECTED
+REJECTED
+MISSED
+ENDED
+FAILED
+CANCELLED
+
+e:
+
+MUTE
+UNMUTE
+
+O sistema deverá estar preparado para que futuramente a gamemode determine regras específicas para cada tipo de chamada, como crédito telefônico, internet, sinal, permissões ou outras mecânicas de RP.
+
+Essas regras não devem ser artificialmente implementadas agora.
+
+O objetivo não é construir uma demonstração.
+
+O objetivo é construir a infraestrutura real do sistema de comunicação do Rocha Roleplay.
