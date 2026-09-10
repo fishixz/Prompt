@@ -1,0 +1,65 @@
+Tentei iniciar o servidor e deu esses erros... Olha o console:
+
+Loaded.
+Loading plugin: discord-connector.so
+>> discord-connector: timeout while initializing data.
+    plugin will proceed to retry connecting in the background.
+Loaded.
+Loaded 6 plugins.
+Started server on port: 7777, with maxplayers: 50
+lammod e is OFF
+Container@pterodactyl~ Server marked as running...
+Filterscripts
+---------------
+    Loading filterscript 'Segurar.amx'...
+[sv:dbg:main:AmxLoad] : net game pointer (value:0x8637e00) received
+[sv:dbg:network:bind] : Voice server running on port 44048
+
+    Loading filterscript 'Lockpick.amx'...
+[sv:dbg:main:AmxLoad] : failed to bind voice server
+
+    Loading filterscript 'sistemagangsoneV2.amx'...
+[sv:dbg:main:AmxLoad] : failed to bind voice server
+
+    Loading filterscript 'Acento.amx'...
+[sv:dbg:main:AmxLoad] : failed to bind voice server
+
+Loaded 4 filterscripts.
+
+Script[gamemodes/LADO.amx]: Run time error 18: "File is for a newer version of the AMX"
+Failed to load 'gamemodes/LADO.amx' script.
+Number of vehicle models: 0
+sh: 1: /home/container/announce: Permission denied
+
+
+Loaded.
+Loading plugin: sscanf.so
+==========================
+    sscanf plugin loaded.
+    Version: 2.8.3
+(c) 2018 Alex "Y_Less" Cole
+==========================
+
+Loaded.
+Loading plugin: sampvoice.so
+[sv:dbg:network:init] : module initializing...
+[dbg:raknet:init] : module initializing...
+[dbg:raknet:init] : installed hook to 'GetRakServerInterface' function (ptr:0x806ca30)
+[dbg:raknet:init] : installed hook to 'OnPlayerDisconnect' function (ptr:0x80a51d0)
+[dbg:raknet:init] : module initialized
+[sv:dbg:network:init] : module initialized
+
+----------------------------------------
+
+              SampVoice
+
+----------------------------------------
+
+SampVoice by MOR loaded
+
+----------------------------------------
+
+Loaded.
+Loading plugin: mapandreas.so
+Loaded.
+Loading plugin: discord-connector.so
