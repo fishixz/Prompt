@@ -1,0 +1,850 @@
+Continue trabalhando DIRETAMENTE no projeto atual e implemente uma nova navegação compacta para os botões laterais/próximos ao minimapa do HUD.
+
+LEIA TODO ESTE PROMPT ANTES DE ALTERAR QUALQUER ARQUIVO.
+
+IMPORTANTE: NÃO recrie o HUD do zero. NÃO desenvolva uma versão alternativa. NÃO substitua sistemas que já funcionam por sistemas novos ou simplificados. NÃO recrie funcionalidades existentes. A intenção é localizar a implementação atual, entender como cada botão funciona e substituir SOMENTE a apresentação/navegação visual, reaproveitando toda a lógica existente sempre que possível.
+
+==================================================
+REFERÊNCIAS VISUAIS OBRIGATÓRIAS
+==================================================
+
+IMAGEM 1 — HUD ATUAL / SITUAÇÃO ATUAL:
+https://github.com/fishixz/Prompt/blob/main/Screenshot_20260905-180404.png
+
+Essa imagem mostra como os botões aparecem atualmente no projeto. Existem vários botões alinhados próximos ao minimapa e eu quero substituir essa estrutura visual.
+
+IMAGEM 2 — REFERÊNCIA EXATA PARA O NOVO DESIGN:
+https://github.com/fishixz/Prompt/blob/main/Screenshot_2026-09-06-16-30-34-171_com.discord.jpg
+
+A SEGUNDA IMAGEM É A PRINCIPAL REFERÊNCIA VISUAL.
+
+Quero que os novos três botões tenham EXATAMENTE esse conceito visual.
+
+NÃO quero uma recriação criativa ou uma interpretação diferente.
+
+Quero:
+
+- três botões;
+- lado a lado;
+- formato semelhante ao mostrado;
+- cantos arredondados;
+- fundo transparente;
+- somente uma borda;
+- ícone centralizado;
+- visual limpo;
+- tamanho semelhante entre os três;
+- espaçamento semelhante ao da referência.
+
+Na imagem de referência as bordas possuem uma tonalidade rosada.
+
+NO MEU PROJETO NÃO UTILIZE ROSA.
+
+Quero a mesma aparência, porém com as bordas CINZA.
+
+==================================================
+OBJETIVO PRINCIPAL
+==================================================
+
+Atualmente existem vários botões visíveis na lateral/próximos ao minimapa.
+
+Quero substituir isso por SOMENTE 3 BOTÕES PRINCIPAIS visíveis permanentemente.
+
+A estrutura será:
+
+[ BOTÃO 1 ] [ BOTÃO 2 ] [ BOTÃO 3 ]
+
+BOTÃO 1 = abrir/fechar os controles adicionais Y, F e H.
+
+BOTÃO 2 = abrir o Menu/Hub que já existe atualmente.
+
+BOTÃO 3 = abrir/fechar o Chat que já existe atualmente.
+
+Ou seja:
+
+Por padrão aparecem SOMENTE os três novos botões.
+
+Y, F e H NÃO devem aparecer permanentemente.
+
+Eles aparecem somente quando o usuário clicar no primeiro botão.
+
+==================================================
+REGRA ABSOLUTA: NÃO RECRIAR FUNCIONALIDADES
+==================================================
+
+Antes de desenvolver qualquer coisa, analise o projeto.
+
+Localize:
+
+- o componente responsável pelos botões atuais;
+- o código visual desses botões;
+- os eventos utilizados;
+- handlers;
+- callbacks;
+- listeners;
+- comandos;
+- funções;
+- eventos nativos;
+- bridges entre interface e jogo, se existirem;
+- funções responsáveis pelo Menu/Hub;
+- função responsável pelo botão pequeno do Chat;
+- implementação atual do botão Y;
+- implementação atual do botão F;
+- mecanismo usado para simular/enviar/acionar teclas;
+- sistema responsável por abrir e fechar o Chat.
+
+NÃO crie funções novas se já existir uma função responsável por isso.
+
+Por exemplo:
+
+Se o botão atual do Menu executa algo como:
+
+openHub()
+
+o novo segundo botão deverá chamar openHub().
+
+NÃO crie:
+
+openNewHub()
+newMenu()
+customHub()
+
+ou qualquer sistema paralelo desnecessário.
+
+O mesmo vale para Chat, Y e F.
+
+A ideia é mudar os BOTÕES, e não reconstruir os sistemas que existem atrás deles.
+
+==================================================
+BOTÃO 1 — CONTROLES ADICIONAIS
+==================================================
+
+O primeiro botão será responsável por abrir e fechar os controles adicionais.
+
+Ao clicar nele pela primeira vez:
+
+mostrar:
+
+Y
+F
+H
+
+Ao clicar novamente:
+
+esconder:
+
+Y
+F
+H
+
+Portanto deve funcionar como TOGGLE.
+
+Estado inicial:
+
+FECHADO.
+
+Por padrão:
+
+Y = invisível
+F = invisível
+H = invisível
+
+Depois de pressionar o primeiro botão:
+
+Y = visível
+F = visível
+H = visível
+
+Pressionar novamente:
+
+Y = invisível
+F = invisível
+H = invisível
+
+Não deixe os botões Y/F/H ocupando espaço permanentemente.
+
+==================================================
+BOTÕES Y E F
+==================================================
+
+Os botões Y e F já possuem funcionalidade no projeto atual.
+
+NÃO recrie essas funcionalidades.
+
+Localize exatamente como os botões atuais executam Y e F.
+
+Reaproveite os mesmos:
+
+- eventos;
+- comandos;
+- callbacks;
+- listeners;
+- funções;
+- mecanismo de input.
+
+A única mudança deverá ser que eles passarão a ficar dentro do novo grupo expansível do primeiro botão.
+
+O comportamento dentro do jogo deve permanecer exatamente igual ao atual.
+
+==================================================
+BOTÃO H
+==================================================
+
+Além de Y e F, adicione também H.
+
+O botão H deverá utilizar o MESMO mecanismo utilizado atualmente para Y e F.
+
+Ou seja, se Y e F simulam um input do jogo, enviam um evento, executam um comando ou chamam uma função específica, use a mesma arquitetura para H.
+
+Não invente uma segunda arquitetura.
+
+O botão H deverá efetivamente executar a ação correspondente à tecla H no sistema.
+
+Antes de implementar, procure se o projeto já possui alguma função/evento/ação relacionada a H.
+
+Se já possuir, reutilize.
+
+==================================================
+VISUAL DO GRUPO Y / F / H
+==================================================
+
+Quando aparecerem, Y, F e H também deverão seguir a nova identidade visual.
+
+Quero:
+
+- fundo transparente;
+- borda cinza;
+- cantos arredondados;
+- texto branco;
+- letras perfeitamente centralizadas;
+- dimensões confortáveis para clique/toque;
+- mesmo padrão visual dos três botões principais.
+
+Não quero botões quadrados antigos.
+
+Não quero caixas azuis.
+
+Não quero background sólido.
+
+Pode aparecer algo semelhante a:
+
+[ Y ] [ F ] [ H ]
+
+ou outra distribuição que se integre melhor ao espaço disponível, desde que permaneça próximo ao primeiro botão e não atrapalhe o minimapa.
+
+A abertura pode possuir uma animação discreta, mas NÃO é obrigatório.
+
+Se adicionar animação, utilize algo simples como:
+
+- fade;
+- pequena expansão;
+- pequeno slide.
+
+Nada exagerado.
+
+==================================================
+BOTÃO 2 — MENU / HUB
+==================================================
+
+O segundo botão deverá abrir EXATAMENTE o Menu/Hub que já existe atualmente.
+
+Não quero um menu novo.
+
+Não quero uma cópia do menu.
+
+Não quero alteração no conteúdo do Hub.
+
+Não quero alteração no comportamento interno.
+
+Procure no projeto o botão que atualmente executa essa função.
+
+Descubra exatamente qual:
+
+- função;
+- evento;
+- callback;
+- comando;
+- listener;
+
+ele executa.
+
+O novo segundo botão deverá simplesmente chamar essa mesma funcionalidade.
+
+O botão antigo correspondente poderá ser removido visualmente depois que o novo botão estiver funcionando corretamente.
+
+==================================================
+BOTÃO 3 — CHAT
+==================================================
+
+O terceiro botão será responsável pelo CHAT.
+
+Atualmente existe um botão pequeno na HUD responsável por abrir o campo de chat.
+
+Quero remover esse pequeno botão antigo visualmente.
+
+Porém:
+
+NÃO remova a funcionalidade.
+
+Transfira essa funcionalidade para o TERCEIRO botão da nova barra.
+
+O novo botão deverá funcionar como TOGGLE.
+
+Comportamento:
+
+Chat fechado + clicar no botão:
+ABRIR CHAT.
+
+Chat aberto + clicar no botão:
+FECHAR CHAT.
+
+Ou seja:
+
+CLICK 1 = abre.
+CLICK 2 = fecha.
+CLICK 3 = abre.
+CLICK 4 = fecha.
+
+E assim sucessivamente.
+
+Se a implementação atual já possui estado de Chat aberto/fechado, REUTILIZE ESSE ESTADO.
+
+Não crie duas variáveis diferentes controlando a mesma coisa.
+
+Se ao abrir o Chat atualmente o sistema:
+
+- habilita um campo de texto;
+- dá foco no input;
+- abre teclado;
+- altera estado;
+- chama callback;
+- bloqueia algum controle;
+- ativa cursor;
+
+preserve exatamente esse comportamento.
+
+Se ao fechar o Chat ele:
+
+- perde foco;
+- esconde input;
+- libera controles;
+- fecha teclado;
+- atualiza algum estado;
+
+preserve também.
+
+O novo botão deve simplesmente substituir o botão visual antigo como forma de acesso à função existente.
+
+==================================================
+NOVO DESIGN — MUITO IMPORTANTE
+==================================================
+
+Utilize esta imagem como referência principal:
+
+https://github.com/fishixz/Prompt/blob/main/Screenshot_2026-09-06-16-30-34-171_com.discord.jpg
+
+EU QUERO O DESIGN NESSE ESTILO.
+
+NÃO quero que você interprete livremente.
+
+NÃO quero que você crie um design futurista diferente.
+
+NÃO quero uma versão "inspirada" completamente diferente.
+
+A intenção é reproduzir a estrutura visual da referência o mais fielmente possível.
+
+Características obrigatórias:
+
+- três botões horizontais;
+- todos do mesmo tamanho;
+- formato retangular curto;
+- largura maior que a altura;
+- cantos bastante arredondados;
+- fundo TRANSPARENTE;
+- cenário do jogo visível através do botão;
+- somente borda;
+- borda fina;
+- ícones brancos;
+- ícone exatamente centralizado;
+- nenhum texto abaixo dos três botões;
+- nenhum título;
+- nenhuma caixa externa envolvendo os três;
+- visual extremamente limpo.
+
+==================================================
+COR DA BORDA
+==================================================
+
+A referência possui uma borda meio rosada.
+
+NÃO utilize rosa.
+
+Utilize CINZA.
+
+Exemplo aproximado:
+
+background: transparent;
+
+border: 1.5px solid rgba(190, 190, 190, 0.65);
+
+border-radius: 15px;
+
+Esses valores são somente uma referência técnica.
+
+Caso seja necessário utilizar:
+
+border: 2px solid rgba(190, 190, 190, 0.60);
+
+também pode.
+
+A prioridade é ficar visualmente parecido com a segunda imagem.
+
+Não quero uma borda extremamente forte.
+
+Ela deve ser claramente perceptível, porém elegante e parcialmente transparente.
+
+==================================================
+FUNDO DOS BOTÕES
+==================================================
+
+O fundo precisa ser TRANSPARENTE.
+
+Não quero:
+
+background preto;
+background azul;
+background cinza;
+background rosa;
+gradiente;
+blur exagerado;
+glass effect pesado;
+imagem;
+textura.
+
+Preferência:
+
+background: transparent;
+
+Se tecnicamente for necessário algum preenchimento mínimo para feedback de clique, utilize algo extremamente discreto SOMENTE durante hover/active/touch.
+
+No estado normal o botão deverá parecer transparente.
+
+==================================================
+CANTOS
+==================================================
+
+Os botões atuais da minha HUD são mais quadrados.
+
+EU NÃO QUERO ISSO.
+
+Quero os cantos arredondados como na segunda imagem.
+
+Visualmente semelhante a um retângulo com curvas bem evidentes.
+
+Não utilize border-radius pequeno como 2px ou 4px.
+
+Use aproximadamente:
+
+12px;
+14px;
+16px;
+18px;
+
+dependendo das dimensões finais do componente.
+
+==================================================
+ÍCONES
+==================================================
+
+Quero ícones simples, brancos e centralizados.
+
+Não quero emojis.
+
+Não quero ícones coloridos.
+
+Não quero imagens rasterizadas desnecessárias.
+
+Dê preferência para SVG.
+
+==================================================
+ÍCONE DO PRIMEIRO BOTÃO
+==================================================
+
+O primeiro botão deve possuir um ícone semelhante ao primeiro símbolo presente na imagem de referência.
+
+Ele lembra uma pequena placa/poste de direção.
+
+Referência de ícone:
+
+Bootstrap Icons — Signpost 2
+
+https://icons.getbootstrap.com/icons/signpost-2/
+
+Você pode utilizar esse SVG como base.
+
+Se já existir no projeto algum ícone praticamente idêntico ao da referência, prefira reaproveitar o asset local.
+
+==================================================
+ÍCONE DO SEGUNDO BOTÃO
+==================================================
+
+O segundo botão deverá possuir um ícone circular semelhante ao que aparece no botão central da referência.
+
+Ele lembra um:
+
+- volante;
+- círculo;
+- anel;
+- controle circular.
+
+Uma referência próxima:
+
+Bootstrap Icons — Life Preserver
+
+https://icons.getbootstrap.com/icons/life-preserver/
+
+A intenção NÃO é necessariamente copiar exatamente esse ícone se houver outro ainda mais próximo da imagem.
+
+A IMAGEM DE REFERÊNCIA TEM PRIORIDADE.
+
+==================================================
+ÍCONE DO TERCEIRO BOTÃO
+==================================================
+
+O terceiro botão deverá utilizar um ícone de chat semelhante ao mostrado na imagem.
+
+Quero um balão de conversa contendo linhas no interior.
+
+Referência:
+
+Bootstrap Icons — Chat Left Text Fill
+
+https://icons.getbootstrap.com/icons/chat-left-text-fill/
+
+O ícone deve ser branco.
+
+==================================================
+ASSETS DOS ÍCONES
+==================================================
+
+Se utilizar SVGs externos como referência, faça o correto:
+
+baixe/incorpore os SVGs necessários dentro dos próprios assets do projeto.
+
+Não quero depender de internet durante o jogo somente para carregar três ícones.
+
+NÃO adicione uma biblioteca gigante ao projeto apenas por causa desses três símbolos.
+
+Se o projeto já possui uma biblioteca de ícones adequada, primeiro verifique se os ícones necessários já existem nela.
+
+==================================================
+PROPORÇÕES DOS TRÊS BOTÕES
+==================================================
+
+Quero algo visualmente muito semelhante à segunda imagem.
+
+Não quero botões enormes.
+
+Não quero botões minúsculos.
+
+Eles devem continuar sendo confortáveis para clique e principalmente toque em celular.
+
+Os três devem possuir:
+
+mesma largura;
+mesma altura;
+mesmo border-radius;
+mesma espessura de borda;
+mesmo tamanho aproximado de ícone;
+mesmo alinhamento vertical.
+
+Exemplo conceitual:
+
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│    ◇    │ │    ◉    │ │    ▤    │
+└─────────┘ └─────────┘ └─────────┘
+
+Isso é SOMENTE representação estrutural.
+
+O design real deverá seguir a segunda imagem.
+
+==================================================
+POSICIONAMENTO
+==================================================
+
+O novo conjunto deverá substituir a região onde os controles atuais ficam próximos ao minimapa.
+
+Não mova o minimapa sem necessidade.
+
+Não redimensione o minimapa.
+
+Não altere elementos externos ao escopo.
+
+Quero substituir os botões atuais pela nova barra de três botões.
+
+O posicionamento deve continuar natural dentro da HUD.
+
+Use como referência a posição mostrada na imagem atual:
+
+https://github.com/fishixz/Prompt/blob/main/Screenshot_20260905-180404.png
+
+==================================================
+RESPONSIVIDADE
+==================================================
+
+Esse projeto é utilizado principalmente em dispositivo móvel.
+
+Portanto teste:
+
+- resolução horizontal;
+- resoluções menores;
+- telas com proporções diferentes;
+- diferentes densidades;
+- diferentes aspect ratios.
+
+Não desenvolva algo que fique correto somente na resolução da imagem de exemplo.
+
+Respeite o sistema de escala atual da interface.
+
+Se o projeto já possui:
+
+vw;
+vh;
+percentuais;
+scale;
+transform;
+responsive containers;
+
+continue utilizando a arquitetura existente.
+
+Não misture sistemas de posicionamento sem necessidade.
+
+==================================================
+INTERAÇÃO POR TOQUE
+==================================================
+
+Os botões precisam funcionar corretamente em tela touch.
+
+Não implemente somente:
+
+:hover
+
+Também deve existir funcionamento de clique/toque real.
+
+Garanta área de toque confortável.
+
+Não faça o ícone ser o único elemento clicável.
+
+A ÁREA INTEIRA DO BOTÃO deve responder ao toque.
+
+==================================================
+FEEDBACK VISUAL
+==================================================
+
+Pode existir feedback discreto quando o usuário pressionar um botão.
+
+Por exemplo:
+
+- borda fica um pouco mais clara;
+- ícone fica um pouco mais claro;
+- botão reduz levemente de escala por poucos milissegundos;
+- pequeno background transparente durante active.
+
+Porém seja EXTREMAMENTE discreto.
+
+Não quero:
+
+glow forte;
+efeito neon;
+animação exagerada;
+pulsação;
+gradiente animado;
+efeito RGB.
+
+==================================================
+ESTADO DO PRIMEIRO BOTÃO
+==================================================
+
+O sistema precisa saber se Y/F/H estão:
+
+abertos
+
+ou
+
+fechados.
+
+Não permita duplicação do grupo.
+
+Se o usuário clicar 20 vezes rapidamente, não podem existir 20 elementos Y/F/H sobrepostos.
+
+Deve existir somente uma instância.
+
+==================================================
+ESTADO DO CHAT
+==================================================
+
+Faça o mesmo com o Chat.
+
+Não permita:
+
+abrir duas instâncias;
+duplicar campo de texto;
+duplicar listener;
+duplicar evento;
+duplicar cursor;
+duplicar foco.
+
+Utilize o estado real que o sistema atual já usa.
+
+==================================================
+EVENT LISTENERS
+==================================================
+
+CUIDADO com listeners.
+
+Não registre o mesmo listener toda vez que o menu abrir.
+
+Não registre novos eventos a cada clique.
+
+Não cause memory leak.
+
+Não faça:
+
+button.onclick -> registra outro event listener -> outro -> outro.
+
+Os listeners precisam ser configurados uma única vez dentro do ciclo correto do componente.
+
+Se o framework atual possuir mecanismos de:
+
+mount;
+unmount;
+cleanup;
+destroy;
+
+respeite-os.
+
+==================================================
+NÃO DUPLICAR O HUD
+==================================================
+
+Não crie um segundo HUD por cima do primeiro.
+
+A intenção é EDITAR o HUD atual.
+
+Localize os componentes responsáveis pela barra atual.
+
+Substitua a camada visual.
+
+Preserve as integrações.
+
+==================================================
+O QUE PODE SER REMOVIDO
+==================================================
+
+Depois de confirmar que os três novos botões funcionam corretamente:
+
+pode remover VISUALMENTE os botões antigos que foram substituídos.
+
+Pode remover o pequeno botão visual antigo responsável exclusivamente por abrir/fechar Chat.
+
+Pode remover containers visuais antigos que não forem mais necessários.
+
+MAS:
+
+não apague funções;
+não apague handlers;
+não apague callbacks;
+não apague eventos;
+
+caso ainda sejam utilizados pelos novos botões ou por qualquer outra parte do sistema.
+
+Antes de apagar qualquer código, faça busca no projeto para verificar referências.
+
+==================================================
+O QUE NÃO DEVE SER ALTERADO
+==================================================
+
+NÃO mexa no celular.
+
+NÃO mexa no sistema do telefone.
+
+NÃO mexa no minimapa.
+
+NÃO mexa no mapa.
+
+NÃO mexa em vida.
+
+NÃO mexa em colete.
+
+NÃO mexa nos indicadores inferiores.
+
+NÃO mexa em energia.
+
+NÃO mexa em veículos.
+
+NÃO mexa em inventário.
+
+NÃO mexa no Menu/Hub internamente.
+
+NÃO recrie o Chat.
+
+NÃO altere comandos de outros sistemas.
+
+NÃO altere a gamemode sem necessidade relacionada aos três botões.
+
+NÃO reorganize arquivos do projeto inteiro.
+
+NÃO troque framework.
+
+NÃO faça refatoração geral.
+
+NÃO mude outras interfaces porque "ficaria mais bonito".
+
+O ESCOPO É SOMENTE ESTA NAVEGAÇÃO.
+
+==================================================
+ORDEM OBRIGATÓRIA DE TRABALHO
+==================================================
+
+FASE 1 — INVESTIGAÇÃO
+
+Antes de editar:
+
+1. Localize o componente dos botões atuais.
+
+2. Localize o CSS/estilos atuais.
+
+3. Identifique todos os botões presentes.
+
+4. Descubra quais deles serão substituídos.
+
+5. Identifique como o Menu/Hub é aberto atualmente.
+
+6. Identifique como o Chat é aberto atualmente.
+
+7. Identifique como o Chat é fechado atualmente.
+
+8. Localize o pequeno botão atual responsável pelo Chat.
+
+9. Identifique como Y funciona atualmente.
+
+10. Identifique como F funciona atualmente.
+
+11. Procure se H já possui alguma implementação.
+
+12. Identifique o sistema utilizado para comunicação entre HUD e jogo.
+
+Somente depois avance.
+
+FASE 2 — ESTRUTURA
+
+Crie/substitua a estrutura visual pelos três botões principais.
+
+Por padrão:
+
+BOTÃO 1 visível.
+BOTÃO 2 visível.
+BOTÃO 3 visível.
+
+Y invisível.
+F invisível.
+H invisív
