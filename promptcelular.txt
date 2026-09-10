@@ -1,0 +1,1106 @@
+MIGRAÇÃO COMPLETA DO ONYX ONE PARA O CELULAR DO ROCHA ROLEPLAY
+
+Você deverá trabalhar diretamente no projeto atual do celular do Rocha Roleplay.
+
+A base visual que será utilizada para substituir o celular atual é o ONYX ONE, baseado no Sky Phone 0.3.5:
+
+https://github.com/sky-systems/sky_phone/releases/download/0.3.5/sky_phone-0.3.5.zip
+
+Leia TODAS as instruções antes de começar.
+
+---
+
+1. REGRA PRINCIPAL — NÃO RECRIE O CELULAR
+
+Esta é a regra mais importante de todo o trabalho.
+
+NÃO recrie o ONYX ONE do zero.
+
+Não tente reproduzir visualmente o Sky Phone usando HTML/CSS novo.
+
+Não crie uma interface "parecida".
+
+Não faça uma versão simplificada.
+
+Não faça uma cópia baseada em screenshots.
+
+Não substitua seus componentes originais por componentes genéricos.
+
+Você deverá utilizar a interface original do ONYX ONE/Sky Phone, trabalhando sobre os próprios arquivos, componentes, estilos, assets, animações e estrutura do projeto original.
+
+O objetivo é pegar o ONYX ONE real e adaptá-lo para funcionar dentro da infraestrutura já existente do celular do Rocha Roleplay.
+
+A aparência final deve continuar sendo a aparência original do ONYX ONE, salvo as alterações explicitamente solicitadas neste documento.
+
+---
+
+2. NÃO RECRIE O PROJETO ATUAL DO ROCHA
+
+Da mesma maneira, NÃO recrie toda a estrutura do celular atual do Rocha.
+
+Primeiro analise o projeto existente.
+
+O celular atual já funciona dentro do APK do Rocha e já possui uma infraestrutura capaz de abrir interfaces desenvolvidas com tecnologias web, utilizando HTML, JavaScript, CSS, assets e demais recursos.
+
+O celular antigo já abre normalmente dentro do APK.
+
+Sua tarefa é fazer com que, no lugar da interface atual, seja aberta a interface do ONYX ONE.
+
+Em outras palavras:
+
+ANTES:
+
+APK → abre celular atual do Rocha.
+
+DEPOIS:
+
+APK → abre ONYX ONE adaptado.
+
+A integração deverá ocorrer dentro da infraestrutura existente.
+
+Não transforme isso em outro aplicativo Android.
+
+Não crie outro APK.
+
+Não crie uma segunda aplicação separada.
+
+Não faça o usuário sair de uma interface e entrar em outra.
+
+O ONYX ONE deverá ocupar o lugar do celular atual.
+
+---
+
+3. ANALISE PRIMEIRO A ARQUITETURA EXISTENTE
+
+Antes de modificar qualquer arquivo, faça uma análise completa de:
+
+- ponto de entrada do celular atual;
+- HTML principal;
+- JavaScript;
+- CSS;
+- Stylus, caso utilizado;
+- assets;
+- imagens;
+- fontes;
+- sistema de navegação;
+- comunicação entre APK e interface web;
+- sistema de abertura/fechamento do telefone;
+- sistema de chamadas;
+- sistema de mensagens;
+- notificações HUB;
+- armazenamento local;
+- GameMode;
+- APIs ou bridges já utilizadas;
+- wallpapers;
+- contatos;
+- números telefônicos;
+- garagem;
+- banco;
+- qualquer integração existente utilizada pelo celular.
+
+Depois analise a estrutura do ONYX ONE.
+
+Identifique quais partes pertencem somente ao FiveM e quais pertencem efetivamente ao frontend/interface do celular.
+
+Somente depois dessa análise comece a migração.
+
+---
+
+4. O FRONTEND ORIGINAL DO ONYX ONE DEVE SER PRESERVADO
+
+Preserve tudo que for necessário para manter a experiência visual original.
+
+Isso inclui, quando utilizado:
+
+- estrutura principal da interface;
+- componentes Vue;
+- JavaScript/TypeScript;
+- componentes compartilhados;
+- componentes visuais;
+- CSS;
+- estilos;
+- animações;
+- transições;
+- ícones;
+- imagens;
+- assets;
+- fontes;
+- tela inicial;
+- tela de bloqueio;
+- central de controle;
+- sistema de notificações visual;
+- folders/pastas;
+- widgets utilizados;
+- navegação;
+- App Store;
+- Configurações;
+- estrutura visual dos aplicativos mantidos;
+- sistema de wallpapers;
+- componentes de teclado;
+- diálogos;
+- menus;
+- sheets;
+- modais;
+- efeitos visuais;
+- aparência clara/escura quando aplicável.
+
+Não simplifique o design apenas para facilitar a implementação.
+
+---
+
+5. REMOVA TODA DEPENDÊNCIA EXCLUSIVA DE FIVEM
+
+O Sky Phone foi desenvolvido originalmente para FiveM.
+
+O projeto final NÃO será executado como um resource FiveM.
+
+Portanto, faça uma auditoria completa e remova tudo que seja exclusivamente necessário para execução dentro do FiveM e que não tenha utilidade dentro do APK.
+
+Por exemplo, caso realmente não sejam necessários:
+
+- scripts Lua;
+- client Lua;
+- server Lua;
+- fxmanifest;
+- bridges de framework FiveM;
+- ESX;
+- QBCore;
+- Qbox;
+- scripts de inventário;
+- integração oxmysql;
+- migrations exclusivas do banco Sky Phone;
+- sistema de SIM físico do FiveM;
+- props;
+- animações GTA/FiveM;
+- payphones;
+- integração com pma-voice;
+- SaltyChat;
+- YACA;
+- housing adapters;
+- garage adapters exclusivos de FiveM;
+- comandos administrativos FiveM;
+- arquivos de server.cfg;
+- resources;
+- callbacks NUI exclusivos do FiveM;
+- configurações exclusivas de servidor FiveM;
+- testes ou arquivos de desenvolvimento sem uso no build final;
+- qualquer outro backend FiveM que não possa funcionar no APK.
+
+IMPORTANTE:
+
+Não simplesmente delete esses arquivos sem verificar dependências.
+
+Primeiro identifique se alguma parte do frontend utiliza determinada configuração ou dado presente nesses arquivos.
+
+Se utilizar, extraia somente os dados necessários para uma estrutura compatível com o projeto do Rocha e posteriormente remova a dependência FiveM.
+
+O resultado final não deverá depender de:
+
+"GetParentResourceName()"
+
+callbacks NUI do FiveM,
+
+exports FiveM,
+
+events FiveM,
+
+Lua,
+
+ESX,
+
+QBCore,
+
+Qbox,
+
+oxmysql,
+
+ou qualquer runtime existente exclusivamente dentro do FiveM.
+
+---
+
+6. REAPROVEITE A INFRAESTRUTURA DO CELULAR ANTIGO
+
+Não tente reinventar sistemas que o celular atual do Rocha já possui funcionando.
+
+Sempre que possível:
+
+interface = ONYX ONE
+
+lógica/integração = sistema atual do Rocha
+
+Isso é especialmente importante em funcionalidades conectadas à GameMode.
+
+---
+
+7. APLICATIVO TELEFONE
+
+Mantenha o aplicativo Phone, porém seu nome visível deverá ser:
+
+Telefone
+
+Use a interface visual do aplicativo Telefone do ONYX ONE.
+
+Entretanto, NÃO recrie do zero o sistema de chamadas.
+
+O celular atual do Rocha já possui um sistema de telefone funcional e integrado à GameMode.
+
+Analise o sistema existente e adapte a interface do ONYX ONE para utilizar a lógica já funcional.
+
+Reaproveite, quando aplicável:
+
+- realização de chamadas;
+- recebimento de chamadas;
+- encerramento;
+- contatos;
+- recentes;
+- identificação do número;
+- comunicação com a GameMode;
+- estados de chamada;
+- eventos;
+- integração existente com o APK.
+
+Substitua apenas a camada/interface necessária.
+
+---
+
+8. FORMATO DOS NÚMEROS TELEFÔNICOS
+
+O Sky Phone utiliza números maiores.
+
+No Rocha Roleplay o sistema telefônico utiliza apenas:
+
+6 dígitos.
+
+Formato visual:
+
+000-000
+
+Exemplo:
+
+"123-456"
+
+A regra deve ser global.
+
+Não altere apenas o teclado.
+
+Revise:
+
+- Telefone;
+- Contatos;
+- Mensagens;
+- histórico de chamadas;
+- busca;
+- compartilhamento de contatos;
+- perfil;
+- Configurações;
+- qualquer lugar onde número telefônico apareça.
+
+O campo de discagem deve aceitar no máximo 6 dígitos numéricos.
+
+Exemplo:
+
+Usuário digitou:
+
+"123456"
+
+Ao tentar digitar outro número:
+
+"1234567"
+
+o sétimo dígito deverá ser simplesmente recusado.
+
+Não permita mais de seis números.
+
+O hífen é preferencialmente apenas formatação visual.
+
+Internamente pode utilizar:
+
+"123456"
+
+Visualmente apresentar:
+
+"123-456"
+
+Não introduza espaços de agrupamento no padrão original de dez dígitos do Sky Phone.
+
+---
+
+9. APLICATIVO MENSAGENS
+
+Mantenha Messages.
+
+Nome em português:
+
+Mensagens
+
+Assim como no Telefone, reutilize o sistema de mensagens atualmente existente no celular do Rocha.
+
+Não reconstrua desnecessariamente a lógica de comunicação.
+
+Use:
+
+Interface do ONYX ONE + lógica já integrada à GameMode.
+
+Revise também todas as validações de número para o padrão de seis dígitos.
+
+---
+
+10. APLICATIVOS QUE DEVEM FUNCIONAR
+
+Os seguintes aplicativos deverão permanecer disponíveis:
+
+Telefone
+
+Mensagens
+
+Banco
+
+Garagem
+
+Fotos/Galeria
+
+Músicas
+
+Notas
+
+Calculadora
+
+App Store
+
+Configurações
+
+Esses aplicativos deverão abrir normalmente.
+
+---
+
+11. BANCO
+
+Mantenha o aplicativo de Banking.
+
+Nome visível:
+
+Banco
+
+Ele NÃO deverá continuar dependendo da implementação de economia FiveM do Sky Phone.
+
+Analise a economia, APIs e GameMode existentes do Rocha.
+
+Caso o celular antigo já possua integração bancária, reutilize essa integração.
+
+Se o sistema bancário existir diretamente na GameMode, conecte o frontend do Banco do ONYX ONE a esse sistema.
+
+Nunca crie valores bancários falsos somente para fazer a interface funcionar.
+
+O saldo mostrado deve vir do sistema real existente.
+
+---
+
+12. GARAGEM
+
+Mantenha Garage.
+
+Nome:
+
+Garagem
+
+O Rocha já possui um sistema de garagem dentro de sua GameMode.
+
+Portanto:
+
+NÃO utilize a infraestrutura de garage providers do FiveM presente originalmente no Sky Phone.
+
+NÃO crie outro sistema de garagem paralelo.
+
+Analise o sistema de garagem atualmente existente no Rocha e conecte o aplicativo Garagem do ONYX ONE a ele.
+
+O ONYX ONE deverá funcionar como frontend/interface dessa garagem.
+
+Preserve o visual do aplicativo.
+
+---
+
+13. FOTOS / GALERIA
+
+Mantenha o aplicativo Photos.
+
+Nome:
+
+Fotos ou Galeria, de acordo com a melhor consistência da interface.
+
+Ele deverá abrir normalmente.
+
+Como a câmera inicialmente estará bloqueada, é normal que não existam fotografias novas.
+
+Não invente fotos fictícias para produção.
+
+O aplicativo deve continuar estruturalmente pronto para receber fotos posteriormente.
+
+---
+
+14. MÚSICAS
+
+Mantenha Music.
+
+Nome:
+
+Músicas
+
+Remova dependências exclusivamente FiveM caso existam e adapte os mecanismos necessários ao ambiente atual.
+
+Preserve sua interface.
+
+---
+
+15. NOTAS
+
+Mantenha Notes.
+
+Nome:
+
+Notas
+
+Deixe funcional.
+
+Persistência deverá utilizar o mecanismo apropriado disponível no projeto, preferencialmente a infraestrutura atual ou armazenamento local quando aplicável.
+
+---
+
+16. CALCULADORA
+
+Mantenha Calculator.
+
+Nome:
+
+Calculadora
+
+Ela deverá funcionar normalmente.
+
+---
+
+17. APP STORE
+
+Mantenha o aplicativo App Store.
+
+Entretanto, revise completamente seu catálogo.
+
+Aplicativos removidos definitivamente NÃO podem continuar aparecendo para instalação.
+
+Não mostre ícones ou páginas de aplicativos que já foram eliminados do sistema.
+
+Os aplicativos que estão preservados porém temporariamente indisponíveis podem continuar registrados apenas se isso fizer sentido para a arquitetura, mas não permita instalar uma segunda cópia deles.
+
+---
+
+18. CONFIGURAÇÕES
+
+Preserve o aplicativo Settings.
+
+Nome:
+
+Configurações
+
+Ele precisará de uma revisão profunda depois que os aplicativos forem removidos.
+
+Não deixe referências quebradas ou menus apontando para funcionalidades inexistentes.
+
+---
+
+19. SKY CLOUD — REMOVER COMPLETAMENTE
+
+Remova o Sky Cloud do ONYX ONE.
+
+Não quero utilizar o sistema de cloud/backup do Sky Phone.
+
+Remova:
+
+- opção Sky Cloud das Configurações;
+- login;
+- backup;
+- sincronização;
+- contas relacionadas exclusivamente ao Sky Cloud;
+- textos;
+- telas;
+- botões;
+- componentes;
+- serviços;
+- stores;
+- estados;
+- chamadas;
+- sincronização automática;
+- referências visuais;
+- dependências utilizadas exclusivamente por essa função.
+
+Não deixe opções desabilitadas do Sky Cloud.
+
+Remova efetivamente da interface.
+
+Preserve somente funcionalidades compartilhadas que outros sistemas realmente utilizem.
+
+---
+
+20. CONFIGURAÇÕES → NOTIFICAÇÕES
+
+Existe uma área de Configurações onde o usuário pode gerenciar notificações por aplicativo.
+
+Revise essa área depois de concluir a remoção dos aplicativos.
+
+Ela deve mostrar somente aplicativos que realmente continuam presentes no ONYX ONE adaptado.
+
+Não poderá continuar exibindo:
+
+Mail,
+
+DarkChat,
+
+Radio,
+
+jogos removidos,
+
+redes sociais removidas,
+
+ou qualquer outro aplicativo eliminado.
+
+Essa regra não vale somente para Notificações.
+
+Faça uma busca global.
+
+Qualquer tela que enumere os aplicativos instalados deverá ser sincronizada com a nova lista.
+
+Isso inclui, caso existam:
+
+- notificações;
+- armazenamento;
+- permissões;
+- App Store;
+- gerenciamento de apps;
+- configurações individuais;
+- sugestões;
+- widgets;
+- busca;
+- compartilhamento;
+- listas internas.
+
+Não deixe "aplicativos fantasmas".
+
+---
+
+21. CONECTIVIDADE
+
+Nas Configurações, preserve:
+
+Wi-Fi
+
+Bluetooth
+
+Dados Celulares / Cellular
+
+Essas opções podem continuar sendo predominantemente visuais.
+
+Não é necessário implementar hardware real caso isso não faça parte da infraestrutura atual.
+
+---
+
+22. FOCO / FOCUS
+
+Remova completamente a área:
+
+Focus / Foco
+
+Não quero essa funcionalidade na versão atual.
+
+Remova sua entrada de Configurações e seus componentes exclusivos caso não sejam utilizados em outro lugar.
+
+---
+
+23. PASSCODE E SEGURANÇA
+
+Preserve os sistemas de passcode/segurança existentes que façam parte da experiência normal do aparelho, desde que sejam compatíveis com o ambiente do APK.
+
+Remova apenas dependências FiveM ou Sky Cloud relacionadas.
+
+Todos os textos deverão respeitar o sistema de idiomas definido neste documento.
+
+---
+
+24. GERAL
+
+Preserve a seção General, porém seu nome em português deverá ser:
+
+Geral
+
+Corrija todos os textos ainda existentes em inglês quando Português estiver selecionado.
+
+Essa seção deverá mostrar as informações corretas do novo aparelho.
+
+---
+
+25. NOME DO APARELHO
+
+O aparelho deverá se chamar:
+
+ONYX ONE
+
+Remova nomes como:
+
+Sky Phone
+
+Sky
+
+iFruit Phone
+
+ou qualquer outro nome original apresentado como nome do dispositivo quando estiver relacionado ao produto anterior.
+
+Cuidado para não fazer substituição cega em identificadores técnicos que possam quebrar o código.
+
+Estamos falando principalmente do branding apresentado ao usuário.
+
+---
+
+26. VERSÃO DO SISTEMA
+
+A versão apresentada dentro do aparelho deverá ser:
+
+0.0.1
+
+Não utilizar 0.3.5 como versão do sistema apresentado ao jogador.
+
+0.3.5 é apenas a versão da base Sky Phone utilizada para desenvolver o ONYX ONE.
+
+A versão do sistema do ONYX ONE no Rocha será:
+
+0.0.1
+
+---
+
+27. SISTEMA DE IDIOMAS
+
+Idioma padrão:
+
+Português (Brasil)
+
+Também deverá existir:
+
+English
+
+Nas Configurações, disponibilize uma opção para trocar o idioma.
+
+O usuário deverá conseguir selecionar:
+
+Português (Brasil)
+
+English
+
+Não faça uma tradução parcial.
+
+Todo o sistema deverá acompanhar a alteração.
+
+Português selecionado:
+
+- menus em português;
+- Configurações em português;
+- nomes dos apps em português;
+- notificações em português;
+- erros em português;
+- diálogos em português;
+- botões em português;
+- telas de aplicativos em português;
+- tela de bloqueio em português;
+- sistema em português.
+
+English selecionado:
+
+toda a interface correspondente deverá aparecer em inglês.
+
+Estruture corretamente os locales.
+
+Evite strings espalhadas diretamente pelos componentes quando elas deveriam utilizar o sistema de internacionalização.
+
+---
+
+28. NÃO RENOMEIE IDENTIFICADORES INTERNOS SEM NECESSIDADE
+
+Existe uma diferença entre:
+
+nome mostrado ao usuário
+
+e
+
+identificador interno do aplicativo.
+
+Por exemplo:
+
+identificador:
+
+"phone"
+
+nome:
+
+"Telefone"
+
+Outro:
+
+"messages"
+
+nome:
+
+"Mensagens"
+
+Não faça algo como renomear cegamente todas as ocorrências de:
+
+"phone"
+
+para:
+
+"telefone"
+
+Isso pode quebrar:
+
+- imports;
+- rotas;
+- stores;
+- eventos;
+- keys;
+- permissões;
+- callbacks;
+- registros;
+- componentes.
+
+Traduza o que é VISÍVEL.
+
+Somente altere identificadores internos caso exista uma razão técnica real e todas as referências sejam refatoradas corretamente.
+
+---
+
+29. APLICATIVOS PRESERVADOS, MAS TEMPORARIAMENTE INDISPONÍVEIS
+
+Os seguintes aplicativos deverão permanecer visualmente instalados:
+
+Câmera
+
+Mapa
+
+Notícias
+
+Picstagram
+
+Clima
+
+Todos devem manter:
+
+- ícone;
+- nome;
+- presença na tela inicial;
+- componentes necessários para futura ativação;
+- assets essenciais;
+- estrutura do aplicativo.
+
+PORÉM:
+
+quando o usuário tocar neles, o aplicativo NÃO deverá abrir.
+
+---
+
+30. COMPORTAMENTO DOS APPS INDISPONÍVEIS
+
+Ao tocar em:
+
+Câmera,
+
+Mapa,
+
+Notícias,
+
+Picstagram,
+
+Clima,
+
+utilize o sistema de notificações HUB que já existe no celular atual do Rocha.
+
+Mostrar:
+
+Aplicativo indisponível
+
+Não abra a aplicação antes da notificação.
+
+Não carregue suas páginas pesadas em segundo plano.
+
+Não inicialize serviços exclusivos desses aplicativos enquanto eles estiverem indisponíveis.
+
+A ideia é manter a possibilidade de habilitá-los futuramente sem precisar reconstruí-los.
+
+---
+
+31. NOMES DOS APPS INDISPONÍVEIS
+
+Use:
+
+Camera → Câmera
+
+Map → Mapa
+
+Weazel News → preferencialmente Notícias
+
+Picstagram → Picstagram
+
+Weather → Clima
+
+Não precisa utilizar o branding Weazel News caso ele não combine com o Rocha.
+
+Preserve a estrutura técnica se necessária, mas o nome visual deverá ser adequado.
+
+---
+
+32. PICSTAGRAM
+
+Preserve o Picstagram.
+
+Ele é a versão de rede social semelhante ao Instagram existente no Sky Phone.
+
+Por enquanto ficará indisponível.
+
+Não remova seus componentes necessários para uma futura implementação.
+
+Entretanto, não inicialize backend, sincronização, feed ou serviços pesados enquanto o aplicativo estiver bloqueado.
+
+---
+
+33. CLIMA
+
+Preserve o aplicativo Weather.
+
+Nome em português:
+
+Clima
+
+Ele ficará temporariamente indisponível.
+
+Ao tocar:
+
+HUB →
+
+Aplicativo indisponível
+
+Não remova a estrutura necessária para que futuramente ele possa ser ativado.
+
+---
+
+34. CÂMERA
+
+Preserve Camera.
+
+Nome:
+
+Câmera
+
+Por enquanto:
+
+não abrir.
+
+Mostrar pela HUB:
+
+Aplicativo indisponível
+
+Não tente utilizar APIs FiveM de screenshots ou câmera GTA.
+
+Essa adaptação poderá ser realizada posteriormente.
+
+---
+
+35. MAPA
+
+Preserve Map.
+
+Nome:
+
+Mapa
+
+Não abra por enquanto.
+
+Mostrar:
+
+Aplicativo indisponível
+
+Preserve sua interface e componentes necessários para uma futura integração com o sistema de mapa do Rocha.
+
+---
+
+36. NOTÍCIAS
+
+Preserve Weazel News estruturalmente.
+
+Nome apresentado ao usuário:
+
+Notícias
+
+Por enquanto:
+
+Aplicativo indisponível
+
+Não inicialize seus serviços de notícias.
+
+---
+
+37. REMOVA TODAS AS OUTRAS REDES SOCIAIS
+
+Remova completamente:
+
+FlipTok
+
+Feather
+
+Flare
+
+CrewLink
+
+O Picstagram é a única rede social preservada por enquanto.
+
+---
+
+38. REMOVA COMPLETAMENTE ESTES APLICATIVOS
+
+Os aplicativos abaixo NÃO deverão existir no produto final atual:
+
+Mail
+
+DarkChat
+
+Radio
+
+FlipTok
+
+Feather
+
+Flare
+
+CrewLink
+
+Billing
+
+Companies
+
+CityMarkt
+
+Local Pages
+
+House/Housing
+
+SkyRide
+
+CityWarn
+
+Crypto
+
+Health
+
+Calendar
+
+Clock
+
+Memos / Voice Memos
+
+Snake
+
+Memory
+
+Number Merge
+
+Minesweeper
+
+Tower Stack
+
+Sky Flappy
+
+Neon Drop
+
+e qualquer outro aplicativo nativo do Sky Phone que não tenha sido explicitamente autorizado neste documento.
+
+---
+
+39. REMOVER SIGNIFICA REMOVER — NÃO APENAS ESCONDER
+
+NÃO faça isso:
+
+"display: none"
+
+NÃO simplesmente esconda ícones.
+
+NÃO deixe aplicativos inteiros carregando em segundo plano.
+
+Para os apps definidos como REMOVIDOS, faça uma análise de dependências e remova seus arquivos exclusivos.
+
+Isso pode incluir:
+
+- componentes;
+- páginas;
+- rotas;
+- stores;
+- composables exclusivos;
+- imagens;
+- vídeos;
+- sons;
+- assets;
+- ícones;
+- traduções exclusivas;
+- mocks;
+- dados de testes;
+- fixtures;
+- serviços;
+- listeners;
+- workers;
+- APIs;
+- imports;
+- constantes;
+- configurações;
+- bibliotecas utilizadas exclusivamente pelo app;
+- código morto.
+
+Depois remova imports e referências órfãs.
+
+---
+
+40. NÃO REMOVA COMPONENTES COMPARTILHADOS
+
+Antes de apagar qualquer componente, verifique se ele também é utilizado por um aplicativo preservado.
+
+Não delete:
+
+um modal,
+
+um componente UI,
+
+um helper,
+
+um composable,
+
+um asset,
+
+uma biblioteca,
+
+ou qualquer recurso compartilhado
+
+somente porque ele também era utilizado por um aplicativo removido.
+
+Faça análise de dependência real.
+
+Objetivo:
+
+remover código morto sem quebrar código compartilhado.
+
+---
+
+41. OTIMIZAÇÃO É PRIORIDADE
+
+Este celular será executado em um aparelho real através do APK.
+
+Portanto, desempenho é uma prioridade.
+
+A base Sky Phone possui muitos aplicativos, recursos, animações e componentes.
+
+Depois das remoções:
+
+- elimine bundles mortos;
+- elimine imports não utilizados;
+- elimine assets órfãos;
+- elimine código morto;
+- evite inicialização desnecessária;
+- não carregue apps indisponíveis até
