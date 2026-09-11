@@ -4,7 +4,7 @@ IMPORTANTE: não faça alterações aleatórias, não substitua bibliotecas sem 
 
 Existe uma pasta de referência chamada:
 
-"SourceCodeSampORIGINALcomCEF"
+"SourceCodeSampORIGINALcomCEF" - "/home/android/Downloads/SourceCodeSampORIGINALcomCEF"
 
 Essa pasta contém uma versão original da source do projeto que já funcionava corretamente. Nessa source, o jogo conseguia ser iniciado pelo Launcher e entrar normalmente no GTA/SAMP.
 
