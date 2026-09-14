@@ -1,1433 +1,979 @@
-ROCHASYSTEM — REESTRUTURAÇÃO E EVOLUÇÃO DO CELULAR
+Você irá trabalhar em DOIS projetos Android existentes na mesma máquina.
 
-Continue trabalhando no projeto atual exatamente a partir do estado em que ele se encontra.
+PROJETO ATUAL / DESTINO:
+"/home/android/RochaRoleplay"
 
-Este projeto faz parte do ecossistema do Rocha Roleplay e representa a interface do sistema de celular utilizado pelo servidor.
+PROJETO DE REFERÊNCIA / ORIGEM DA NOVA INTERFACE:
+"/home/android/Rocha-Roleplay"
 
-O objetivo deste prompt é trabalhar EXCLUSIVAMENTE na interface, experiência de usuário, navegação, componentes, estados visuais e preparação dos aplicativos do celular.
+Seu objetivo é modernizar e reconstruir partes do projeto "/home/android/RochaRoleplay" utilizando como referência direta componentes, layouts, estilos, recursos, lógica e elementos existentes em "/home/android/Rocha-Roleplay".
 
-Não tente implementar neste momento a integração direta com a gamemode SA-MP, scriptfiles, bancos da gamemode ou qualquer outro sistema externo que ainda não tenha uma API definida.
+IMPORTANTE: não quero apenas uma adaptação visual aproximada. Quando eu indicar que determinada tela do projeto novo deve substituir uma tela antiga, reutilize de verdade os arquivos, componentes, drawables, fontes, dimensões, animações, estilos e recursos visuais do projeto "/home/android/Rocha-Roleplay".
 
-A comunicação com o servidor será feita posteriormente através de uma API própria do RochaSystem.
+As cores principais do Rocha Roleplay são:
 
----
+- Preto
+- Cinza
+- Branco
 
-REGRA PRINCIPAL
+Caso seja necessário utilizar cores adicionais para contraste, status, erros ou elementos específicos, é permitido, mas a identidade principal deve continuar sendo preto, cinza e branco.
 
-Antes de alterar qualquer coisa:
-
-1. Analise completamente o projeto atual.
-2. Entenda a arquitetura existente.
-3. Identifique os componentes reutilizáveis.
-4. Identifique os aplicativos já existentes.
-5. Identifique como o celular abre e fecha.
-6. Identifique como as páginas são navegadas.
-7. Identifique como temas e idiomas funcionam atualmente.
-8. Identifique quais dados atualmente são mockados.
-9. Identifique quais sistemas já possuem alguma integração.
-10. Não recrie o projeto do zero.
-11. Não substitua sistemas funcionais por versões simplificadas.
-12. Não remova funcionalidades existentes sem necessidade.
-13. Não altere visualmente algo que já funciona corretamente sem motivo.
-14. Não crie dados falsos para simular funcionalidades reais quando uma estrutura melhor puder ser preparada para futura integração.
-15. Não implemente backend externo neste momento.
-16. Não invente endpoints de uma API que ainda não foi fornecida.
-17. Não invente dados provenientes da gamemode.
-18. Quando uma informação depender do servidor, prepare a interface para recebê-la através de uma camada de serviço/API futuramente.
+Se algum recurso migrado possuir amarelo, laranja ou outra cor que não faça sentido na identidade visual atual, altere para um equivalente em preto, cinza ou branco, mantendo contraste, legibilidade e aparência profissional.
 
 ---
 
-IMPORTANTE — ARQUITETURA FUTURA
-
-O celular será conectado futuramente ao:
-
-RochaSystem
-
-O RochaSystem será responsável pela API/backend que fará a comunicação entre:
-
-SA-MP / Gamemode
-↓
-RochaSystem API
-↓
-CEF / Launcher
-↓
-Aplicativos do celular
-
-Portanto, neste projeto:
-
-- não implemente comunicação direta com SA-MP;
-- não implemente scriptfiles;
-- não crie arquivos de jogador;
-- não crie banco paralelo para substituir o servidor;
-- não invente sistema próprio de persistência para dados que pertencem ao servidor;
-- não invente números telefônicos;
-- não invente saldo bancário;
-- não invente jogadores;
-- não invente contatos globais;
-- não invente mensagens como se fossem reais.
-
-Quando uma funcionalidade precisar de dados externos, crie uma camada de serviço bem definida para que posteriormente a API do RochaSystem possa ser conectada sem precisar reescrever toda a interface.
-
-Exemplo conceitual:
-
-UI
- ↓
-Service
- ↓
-RochaSystem API
- ↓
-Gamemode / Dados reais
-
-Não é obrigatório utilizar exatamente esses nomes.
-
----
-
-EXECUÇÃO POR FASES
-
-Execute o trabalho em fases.
-
-Não tente executar todas as fases de uma vez.
-
-Dentro de cada chamada, implemente o maior número de fases que conseguir concluir com segurança, respeitando a ordem.
-
-Porém:
-
-- não comece uma fase se a anterior estiver incompleta;
-- teste o que foi alterado;
-- revise os arquivos modificados;
-- procure regressões;
-- corrija os problemas encontrados.
-
-Quando chegar ao limite do que consegue implementar/testar com segurança naquela chamada, pare.
-
-Nesse momento, informe:
-
-- quais fases foram concluídas;
-- quais foram testadas;
-- quais problemas foram encontrados;
-- em qual fase você parou;
-- o que falta fazer.
-
-Depois pergunte:
-
-"Posso prosseguir para as próximas fases?"
-
-Quando eu responder que sim, continue exatamente de onde parou.
-
-Antes de cada nova execução, releia este prompt e confirme mentalmente a ordem das fases para não se perder.
-
----
-
-FASE 0 — ANÁLISE DO PROJETO
-
-Antes de modificar código, faça uma análise completa.
-
-Mapeie:
-
-- estrutura de pastas;
-- componentes;
-- páginas;
-- aplicativos;
-- hooks;
-- contextos;
-- serviços;
-- estados globais;
-- sistema de navegação;
-- sistema de temas;
-- sistema de idiomas;
-- componentes compartilhados;
-- modais;
-- componentes de telefone;
-- componentes do WhatsApp;
-- componentes de contatos;
-- componentes de mensagens;
-- componentes de chamadas.
-
-Identifique também:
-
-- código duplicado;
-- componentes inutilizados;
-- dados mockados;
-- componentes quebrados;
-- estados inconsistentes;
-- listeners duplicados;
-- timers;
-- intervalos;
-- efeitos que executam excessivamente;
-- problemas de montagem/desmontagem.
-
-Não altere nada ainda se não for necessário.
-
-Primeiro compreenda a arquitetura existente.
-
----
-
-FASE 1 — RESPONSIVIDADE DO CELULAR
-
-Corrija o problema atual em que o celular não se adapta corretamente a telas menores.
-
-O celular deve:
-
-- respeitar a largura disponível;
-- respeitar a altura disponível;
-- manter proporção;
-- não ultrapassar o viewport;
-- não cortar a parte superior;
-- não cortar notch;
-- não cortar cabeçalho;
-- não cortar conteúdo;
-- adaptar-se automaticamente;
-- continuar agradável em telas grandes;
-- funcionar após redimensionamento da janela.
-
-Não simplesmente esconda partes do celular.
-
-Corrija a escala e o dimensionamento corretamente.
-
-Teste visualmente:
-
-- desktop;
-- telas pequenas;
-- resoluções menores;
-- diferentes proporções;
-- redimensionamento.
-
----
-
-FASE 2 — REMOVER BOTÃO X DO CELULAR
-
-Remova o botão visual de fechar:
-
-X
-
-O celular já possui mecanismo de fechamento através de duplo clique fora dele.
-
-Mantenha esse comportamento funcionando.
-
-Teste:
-
-- abrir;
-- fechar;
-- duplo clique fora;
-- abrir novamente;
-- navegar e fechar.
-
-A remoção do X não pode quebrar o estado do celular.
-
----
-
-FASE 3 — CONFIGURAÇÕES / NOTIFICAÇÕES
-
-Na área:
-
-Configurações → Notificações
-
-existem aplicativos inexistentes ou sem ícone.
-
-Corrija a origem da lista.
-
-A interface deve mostrar somente aplicativos realmente disponíveis no sistema do celular.
-
-Não exibir:
-
-- aplicativos inexistentes;
-- placeholders;
-- entradas duplicadas;
-- aplicativos removidos;
-- itens sem identificação.
-
-Reutilize a mesma fonte de aplicativos utilizada pelo restante do sistema quando possível.
-
-Não crie uma segunda lista manual.
-
----
-
-FASE 4 — IDIOMA DO CELULAR
-
-Na área:
-
-General → Language & Region
-
-deixe somente:
-
-- Português (Brasil)
-- English
-
-Implemente a troca real da interface nativa do celular.
-
-Português deverá alterar elementos como:
-
-- Configurações;
-- Geral;
-- Idioma e Região;
-- Tela e Brilho;
-- Notificações;
-- Telefone;
-- Contatos;
-- Mensagens;
-- Câmera;
-- botões;
-- menus;
-- títulos;
-- alertas;
-- textos internos.
-
-English deverá alterar esses mesmos elementos para inglês.
+ETAPA 1 — ANÁLISE COMPLETA DOS DOIS PROJETOS
+
+Antes de alterar qualquer arquivo:
+
+1. Analise toda a estrutura dos dois projetos.
+
+2. Identifique:
+   
+   - Activities
+   - Fragments
+   - Dialogs
+   - Adapters
+   - ViewModels
+   - Controllers
+   - Services
+   - Managers
+   - arquivos Java
+   - arquivos Kotlin
+   - código C/C++/JNI, caso exista
+   - XML de layouts
+   - drawables
+   - mipmaps
+   - strings
+   - colors
+   - dimens
+   - styles
+   - themes
+   - fonts
+   - animations
+   - navigation
+   - manifests
+   - Gradle
+   - recursos utilizados pelo cliente SA-MP
+
+3. Antes de excluir qualquer arquivo, pesquise todas as referências a ele no projeto.
+
+Isso é OBRIGATÓRIO.
+
+Não remova simplesmente um XML porque ele não será mais mostrado.
 
 Exemplo:
 
-Português:
+Se "fragment_settings_page.xml" for removido, procure:
 
-Configurações
+- Fragment associado
+- Activity associada
+- Adapter associado
+- IDs utilizados
+- imports
+- navigation graph
+- ViewBinding/DataBinding
+- chamadas "setContentView"
+- chamadas "inflate"
+- "findViewById"
+- referências no Manifest
+- referências em listas
+- menus
+- classes Java/Kotlin
+- recursos exclusivos desse layout
 
-English:
+Se algum código existir exclusivamente para uma interface que será removida, remova esse código também.
 
-Settings
+Se esse código possuir uma lógica interna que ainda será necessária no futuro, SEPARE A LÓGICA DA INTERFACE antes de remover a interface.
 
-Não faça apenas uma troca superficial.
+Não deixe:
 
-Centralize o sistema de tradução.
+- classes órfãs
+- imports mortos
+- métodos nunca utilizados
+- IDs inexistentes
+- recursos inutilizados
+- referências quebradas
+- layouts apontando para arquivos removidos
+- Activities sem função
+- Fragments abandonados
+- adapters que não são mais utilizados
+
+Ao finalizar cada remoção, confirme a árvore de dependências.
+
+---
+
+ETAPA 2 — REGRA DE MIGRAÇÃO
+
+Sempre que uma tela antiga for substituída por uma tela de "/home/android/Rocha-Roleplay":
+
+1. Não recrie visualmente do zero se o componente já existir no projeto de referência.
+
+2. Copie/migre os componentes existentes.
+
+3. Copie também seus recursos relacionados.
+
+4. Preserve:
+   
+   - tamanho
+   - alinhamento
+   - margens
+   - paddings
+   - fontes
+   - ícones
+   - drawables
+   - backgrounds
+   - corners
+   - sombras
+   - transparências
+   - animações
+   - posições
+   - proporções
+
+5. Caso o projeto utilize SCSS/CSS em algum componente web, WebView ou interface híbrida, migre esses estilos também.
+
+Porém, para layouts Android nativos, procure principalmente:
+
+- "styles.xml"
+- "themes.xml"
+- "colors.xml"
+- "dimens.xml"
+- "drawable/"
+- "font/"
+- arquivos XML de selector
+- shape drawables
+- animation resources
+
+Não adapte o design novo para parecer com o antigo.
+
+O DESIGN NOVO É O DESIGN QUE DEVE PREVALECER.
+
+---
+
+ETAPA 3 — NOVA HOME
+
+Tela atual:
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/activity_main.xml"
+
+Tela que deverá servir como nova Home:
+
+"/home/android/Rocha-Roleplay/app/src/main/res/layout/activity_main.xml"
+
+Migre a interface da segunda para a primeira.
+
+Também migre todos os recursos necessários para que a aparência permaneça igual ao projeto de referência.
+
+A nova Home deve continuar funcionando dentro da arquitetura do projeto atual.
+
+Não destrua funcionalidades importantes apenas para encaixar o novo layout.
+
+Faça a integração entre nova interface e lógica existente.
+
+---
+
+ETAPA 4 — CONFIGURAÇÕES
+
+Atualmente existe um botão que abre:
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/fragment_settings_page.xml"
+
+Não quero mais nenhuma página de configurações visível no launcher.
+
+Remova:
+
+"fragment_settings_page.xml"
+
+e tudo que for EXCLUSIVAMENTE responsável por exibir essa página.
+
+PORÉM:
+
+NÃO EXCLUA O SISTEMA INTERNO DE CONFIGURAÇÕES.
+
+A lógica deverá ser preservada porque posteriormente criaremos um painel in-game que utilizará essas mesmas configurações.
+
+Faça uma separação correta entre:
+
+INTERFACE DE CONFIGURAÇÕES
+
+e
+
+SISTEMA/GERENCIADOR DE CONFIGURAÇÕES.
+
+O sistema interno deverá continuar permitindo leitura e alteração das opções, mesmo sem existir uma tela de configurações no launcher.
+
+Defina inicialmente:
+
+SA-MP Version:
+"0.3.7"
+
+System Keyboard:
+"ATIVO"
+
+Display FPS:
+"ATIVO"
+
+Full Screen Mode:
+"ATIVO"
+
+Voice Chat:
+"ATIVO"
+
+Os demais parâmetros deverão continuar com seus valores padrão atuais.
+
+Essas configurações deverão ser persistentes.
+
+Utilize o sistema de persistência já existente no projeto, como SharedPreferences, DataStore ou sistema equivalente.
+
+Não crie uma segunda implementação se já existir uma funcional.
+
+---
+
+ETAPA 5 — PREPARAÇÃO PARA PAINEL IN-GAME
+
+A lógica de configurações preservada deverá ficar organizada de maneira que futuramente possamos criar um painel dentro do próprio SA-MP.
+
+Idealmente centralize o acesso em uma classe/manager, por exemplo:
+
+"GameSettingsManager"
+
+ou utilize a estrutura equivalente que já existir no projeto.
+
+O futuro painel deverá conseguir:
+
+- consultar configuração
+- ativar configuração
+- desativar configuração
+- alterar versão do SA-MP
+- salvar alteração
+- carregar alteração
+
+Não desenvolva o painel in-game agora.
+
+Apenas preserve e organize a arquitetura para isso.
+
+---
+
+ETAPA 6 — BOTÃO LOJA
+
+A nova Home possui botão de Loja.
+
+Quando o usuário tocar nesse botão, NÃO deverá abrir página externa e NÃO deverá abrir Activity vazia.
+
+Mostre apenas uma mensagem:
+
+"Loja em desenvolvimento."
+
+Pode utilizar Toast, Snackbar ou diálogo compatível com o estilo da interface.
+
+---
+
+ETAPA 7 — SERVIDOR PRINCIPAL
+
+O nome do servidor deverá ser:
+
+"Rocha Roleplay"
+
+Remova qualquer ocorrência visível de:
+
+"Nativo RPG"
+
+Configure o servidor principal como:
+
+IP:
+"209.74.83.63"
+
+Porta:
+"7777"
+
+IMPORTANTE:
+
+O IP NÃO DEVE APARECER VISUALMENTE PARA O USUÁRIO EM NENHUM LUGAR DA INTERFACE.
+
+Ele pode existir internamente no código/configuração necessária para realizar a conexão.
+
+Não exiba:
+
+"209.74.83.63"
+
+nem
+
+"209.74.83.63:7777"
+
+em:
+
+- Home
+- seletor
+- loading
+- dialogs
+- mensagens
+- labels
+- descrição do servidor
+
+---
+
+ETAPA 8 — SELETOR DE SERVIDORES
+
+Manter a seleção atual baseada em:
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/dialog_choose_server.xml"
+
+O nome exibido deve ser:
+
+"Rocha Roleplay"
+
+Ao tocar no nome/botão do servidor na Home, o seletor deverá abrir COMO UMA SOBREPOSIÇÃO sobre a tela atual.
+
+Ou seja:
+
+A Home continua atrás.
+
+O seletor aparece na frente.
+
+O FUNDO ATRÁS DO SELETOR deverá permitir enxergar a Home.
+
+Pode possuir uma leve camada escura/transparente para destacar o diálogo.
+
+IMPORTANTE:
+
+Não estou pedindo para deixar o conteúdo do seletor transparente.
+
+O painel/modal do seletor continua com seu próprio fundo.
+
+O que deve ficar parcialmente transparente é a camada atrás dele.
+
+Implemente utilizando Dialog, DialogFragment, BottomSheet ou outra solução equivalente que preserve exatamente esse comportamento.
+
+Remova o seletor antigo:
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/panel_choose_server.xml"
+
+Porém antes da remoção:
+
+1. Analise toda sua lógica.
+2. Descubra quais componentes controlam seleção de servidor.
+3. Reutilize a lógica necessária no novo "dialog_choose_server.xml".
+4. Somente depois remova o arquivo antigo e códigos exclusivamente associados a ele.
+
+---
+
+ETAPA 9 — BOTÃO JOGAR E CONNECT SCREEN
+
+Ao tocar no novo botão:
+
+"Jogar"
+
+NÃO entre imediatamente no GTA/SA-MP.
+
+Primeiro abra:
+
+"/home/android/Rocha-Roleplay/app/src/main/res/layout/connect_screen.xml"
+
+Migre essa tela para o projeto atual.
+
+Essa será a tela responsável por apresentar o processo de preparação/carregamento do cliente SA-MP.
+
+Fluxo obrigatório:
+
+HOME
+
+→ usuário toca JOGAR
+
+→ "connect_screen"
+
+→ inicialização/preparação do cliente SA-MP
+
+→ carregamento dos componentes necessários
+
+→ abertura/inicialização do SA-MP
+
+→ liberação da loading screen
+
+→ entrada no jogo
+
+Não faça somente uma animação falsa.
+
+Integre essa tela com o fluxo REAL de inicialização existente no projeto.
+
+Investigue onde atualmente o cliente SA-MP é iniciado e conecte o "connect_screen" nessa lógica.
+
+---
+
+ETAPA 10 — LOADING SCREEN
+
+Tela atual:
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/activity_game_loadingscreen.xml"
+
+Nova referência:
+
+"/home/android/Rocha-Roleplay/app/src/main/res/layout/loading_screen.xml"
+
+Substitua a interface antiga pela nova.
+
+Migre também:
+
+- imagens
+- backgrounds
+- drawables
+- fontes
+- animações
+- componentes
+- estilos
+
+Atualmente o projeto não possui corretamente um sistema intermediário de loading do cliente.
+
+Desenvolva a integração necessária.
+
+A loading screen deverá ser utilizada DEPOIS que o processo de "connect_screen" concluir sua etapa inicial e o cliente SA-MP estiver realmente sendo inicializado.
 
 Evite:
 
-if (...)
+- tempos fixos falsos
+- sleeps desnecessários
+- delays artificiais
 
-espalhados por centenas de componentes.
-
-Utilize uma estrutura de tradução organizada.
-
-Aplicativos que possuem identidade própria brasileira podem manter seus próprios textos.
-
-Por exemplo:
-
-- OLX;
-- RoBank.
-
-Não traduza nomes próprios de aplicativos.
+Sempre que possível vincule a progressão a eventos reais do cliente.
 
 ---
 
-FASE 5 — SISTEMA DE TEMA
+ETAPA 11 — REMOVER PAINEL DE BOTÕES
 
-Na área:
+Remover:
 
-Display & Brightness
+"/home/android/RochaRoleplay/app/src/main/res/layout/activity_game_buttonpanel.xml"
 
-corrija os cards de:
+Antes de remover:
 
-- Light;
-- Dark.
+Analise quem utiliza esse layout.
 
-Cada opção deve apresentar corretamente sua preview.
+Caso exista lógica necessária ao jogo que não dependa da interface, preserve e reorganize essa lógica.
 
-Ao selecionar:
+Se tudo estiver ligado exclusivamente ao painel antigo, remova também:
 
-Light
-
-o celular deverá mudar para o tema claro.
-
-Ao selecionar:
-
-Dark
-
-o celular deverá mudar para o tema escuro.
-
-A interface deve indicar visualmente qual tema está selecionado.
-
-Centralize o sistema de tema para evitar componentes mantendo estados diferentes.
+- Activity
+- controlador
+- referências
+- imports
+- IDs
+- bindings
+- recursos exclusivos
 
 ---
 
-FASE 6 — WALLPAPER
+ETAPA 12 — REMOVER CHAT ANTIGO
 
-Corrija o sistema visual de wallpapers.
+Remover:
 
-Problema atual:
+"/home/android/RochaRoleplay/app/src/main/res/layout/activity_game_chat.xml"
 
-a preview apresenta flickering/piscadas nos ícones e aplicativos.
+Também investigar:
 
-Investigue a causa real.
+"layout_chat_item.xml"
 
-Procure por:
+Se forem componentes exclusivamente associados ao chat antigo que está sendo removido, remova os códigos e recursos relacionados.
 
-- renderizações repetidas;
-- timers;
-- setInterval;
-- efeitos;
-- mudanças de estado;
-- remounts;
-- animações conflitantes.
+NÃO remova funções internas do cliente SA-MP responsáveis pela existência do chat do jogo se essas funções forem utilizadas pelo cliente nativo.
 
-Não esconda simplesmente os elementos.
-
-Corrija a causa.
+Remova somente a implementação/interface Android antiga indicada.
 
 ---
 
-FASE 6.1 — LISTA DE WALLPAPERS
+ETAPA 13 — COPYRIGHT
 
-A seleção deve mostrar corretamente os wallpapers disponíveis.
+Remover:
 
-Cada wallpaper deve aparecer:
+"/home/android/RochaRoleplay/app/src/main/res/layout/activity_game_copyright.xml"
 
-uma única vez.
-
-Não duplicar imagens.
-
-Não duplicar cards.
-
-Não gerar cópias através de loops incorretos.
+Também remova somente os componentes exclusivamente associados a essa tela.
 
 ---
 
-FASE 6.2 — REMOVER "ADICIONAR MAIS"
+ETAPA 14 — GAME DIALOG
 
-Remova o botão:
+Substituir:
 
-Adicionar mais
+"/home/android/RochaRoleplay/app/src/main/res/layout/activity_game_dialog.xml"
 
-ou equivalente.
+pela interface:
 
-O jogador deverá selecionar somente entre os wallpapers disponibilizados pelo sistema.
+"/home/android/Rocha-Roleplay/app/src/main/res/layout/dialog.xml"
 
----
+Não apenas copie o XML.
 
-FASE 7 — NAVEGAÇÃO DO WHATSAPP
+Integre a nova interface ao sistema atual de diálogos do SA-MP.
 
-O WhatsApp deve possuir uma navegação semelhante à lógica de um aplicativo real.
+Reutilize a lógica existente responsável por:
 
-Evite utilizar modais para representar páginas inteiras.
+- título
+- mensagem
+- inputs
+- listas
+- botões
+- confirmação
+- cancelamento
 
-Quando o jogador quiser:
+Apenas a apresentação visual deve ser migrada.
 
-- iniciar conversa;
-- visualizar contatos;
-- criar contato;
-- abrir perfil;
-- visualizar informações;
+Também verifique:
 
-utilize páginas/telas internas do aplicativo.
+"layout_dialog_item.xml"
 
-Modais continuam permitidos para:
+Caso o novo diálogo precise de itens de lista, reutilize/adapte somente se necessário.
 
-- confirmação;
-- alertas;
-- pequenas ações;
-- menus contextuais;
-- confirmações de exclusão;
-- ações rápidas.
-
-Mas não utilize modal para substituir uma página inteira.
+Caso se torne totalmente inútil, remova.
 
 ---
 
-FASE 8 — WHATSAPP / TELA DE CONTATOS
+ETAPA 15 — EDIT OBJECT
 
-Ao clicar no botão responsável por iniciar uma conversa ou visualizar contatos:
+Arquivo:
 
-não abrir apenas um modal.
+"/home/android/RochaRoleplay/app/src/main/res/layout/activity_game_editobject.xml"
 
-Abrir uma página interna do WhatsApp.
+Não é necessário substituir a interface inteira.
 
-A página deve possuir:
+Apenas traduza para português os textos exibidos ao usuário.
 
-- cabeçalho;
-- botão voltar;
-- busca;
-- lista de contatos;
-- identificação;
-- avatar;
-- número;
-- botão para novo contato.
+Não traduza:
 
-A navegação deve parecer parte natural do WhatsApp.
+- IDs
+- nomes de métodos
+- variáveis
+- nomes de arquivos
+- chaves internas
+- comandos técnicos necessários ao código
 
----
-
-FASE 9 — WHATSAPP / NOVO CONTATO
-
-Criar uma página dedicada para:
-
-Novo contato
-
-Campos:
-
-- nome;
-- sobrenome, quando aplicável;
-- número;
-- foto opcional, se o sistema atual suportar.
-
-A interface deve possuir:
-
-- validação;
-- estados de loading quando necessário;
-- mensagens de erro;
-- botão salvar;
-- botão cancelar/voltar.
-
-IMPORTANTE:
-
-Neste momento não crie uma persistência de servidor.
-
-Prepare o componente para futuramente utilizar:
-
-ContactService
-
-ou estrutura equivalente.
-
-A futura API poderá substituir a implementação sem necessidade de reconstruir a interface.
+Apenas conteúdo visual.
 
 ---
 
-FASE 10 — WHATSAPP / PERFIL
+ETAPA 16 — TECLADO
 
-O perfil do contato/jogador também deverá ser uma página interna.
+Substituir:
 
-Não utilize um modal gigante como substituto.
+"/home/android/RochaRoleplay/app/src/main/res/layout/activity_game_keyboard.xml"
 
-Criar:
+por:
 
-- cabeçalho;
-- botão voltar;
-- foto;
-- nome;
-- número;
-- informações disponíveis;
-- ações relacionadas.
+"/home/android/Rocha-Roleplay/app/src/main/res/layout/layout_keyboard.xml"
 
-A página deverá ser reutilizável.
+Migrar também todos os recursos associados.
 
----
+A lógica do teclado existente deverá continuar funcionando.
 
-FASE 11 — WHATSAPP / CONVERSA
+Lembrando que:
 
-A tela de conversa deve ser estruturada como uma conversa real.
+"System Keyboard = ATIVO"
 
-Deve possuir:
+por padrão.
 
-- cabeçalho;
-- avatar;
-- nome;
-- status quando disponível;
-- área de mensagens;
-- mensagens enviadas;
-- mensagens recebidas;
-- campo de texto;
-- botão enviar;
-- estados de envio;
-- tratamento de erro.
-
-A interface deve ser preparada para receber mensagens reais posteriormente.
-
-Não inventar mensagens aleatórias.
-
-Caso seja necessário utilizar dados temporários apenas para desenvolver a UI, deixe isso claramente isolado em uma camada de mock que possa ser removida/substituída posteriormente.
+Não destrua APIs utilizadas pelo cliente SA-MP para abrir/fechar teclado, capturar texto ou enviar entrada.
 
 ---
 
-FASE 12 — WHATSAPP / NÚMERO DE TELEFONE
+ETAPA 17 — SCOREBOARD
 
-O WhatsApp deve utilizar o mesmo padrão visual global do sistema telefônico.
+Remover:
 
-Formato:
-
-000-000
-
-Exemplo:
-
-Internamente:
-
-123456
-
-Visualmente:
-
-123-456
-
-Não implemente uma formatação diferente somente no WhatsApp.
-
-Crie/reutilize uma função global:
-
-formatPhoneNumber()
-
-ou equivalente.
-
-Ela deverá ser reutilizada por:
-
-- WhatsApp;
-- Telefone;
-- SMS;
-- Contatos;
-- histórico;
-- perfil;
-- chamadas.
-
-A implementação interna pode utilizar o número sem máscara.
-
----
-
-FASE 13 — PREPARAÇÃO DA API DE MENSAGENS
-
-Não implementar ainda o backend real.
-
-Porém, organize a arquitetura para que o WhatsApp não dependa diretamente da interface.
-
-Criar uma camada conceitual semelhante a:
-
-WhatsAppService
-MessageService
-ContactService
-
-Esses serviços deverão futuramente conversar com o:
-
-RochaSystem API
-
-Exemplo conceitual:
-
-WhatsApp UI
-      ↓
-WhatsAppService
-      ↓
-RochaSystem API
-
-A UI não deverá precisar conhecer:
-
-- URL da API;
-- headers;
-- autenticação;
-- WebSocket;
-- formato interno do servidor.
-
-Essas responsabilidades deverão ficar isoladas na camada de serviço.
-
----
-
-FASE 14 — PREPARAÇÃO PARA CHAMADAS DE ÁUDIO
-
-IMPORTANTE:
-
-O WhatsApp terá:
-
-CHAMADA DE ÁUDIO SOMENTE.
-
-Não implementar chamada de vídeo no WhatsApp.
-
-Não criar:
-
-- câmera durante chamada;
-- vídeo do jogador;
-- video preview;
-- botão de vídeo;
-- transmissão de câmera.
-
-O sistema deverá possuir somente:
-
-Audio Call
-
----
-
-FASE 15 — DOIS TIPOS DE CHAMADA
-
-O RochaSystem deverá futuramente suportar dois tipos de chamada.
-
-TIPO 1 — TELEFONE NORMAL
-
-Representa uma ligação telefônica tradicional.
-
-Conceitualmente:
-
-Phone Call
-
-TIPO 2 — WHATSAPP
-
-Representa uma chamada de áudio através do WhatsApp.
-
-Conceitualmente:
-
-WhatsApp Audio Call
-
-IMPORTANTE:
-
-Os dois sistemas deverão utilizar a mesma infraestrutura de chamada sempre que possível.
-
-Não criar dois sistemas de áudio completamente independentes.
-
-A diferença entre eles deverá ser principalmente:
-
-callType
-
-Por exemplo:
-
-phone
-whatsapp
-
-ou equivalente.
-
----
-
-FASE 16 — API DE CHAMADAS
-
-Prepare a interface para uma API de chamadas unificada.
-
-Conceito:
-
-CallService
-
-O serviço deverá permitir futuramente:
-
-createCall()
-acceptCall()
-rejectCall()
-cancelCall()
-endCall()
-muteCall()
-unmuteCall()
-
-A implementação final da comunicação ficará posteriormente no RochaSystem.
-
-A UI deverá apenas reagir aos estados da chamada.
-
----
-
-FASE 17 — ESTADOS DA CHAMADA
-
-A interface deve estar preparada para os seguintes estados:
-
-idle
-calling
-ringing
-connecting
-connected
-ended
-rejected
-busy
-failed
-
-Não é necessário que todos estejam conectados ao backend agora.
-
-Mas a arquitetura visual deve suportá-los.
-
-Exemplo:
-
-Calling
-
-Mostrar:
-
-- nome;
-- avatar;
-- número;
-- texto "Chamando...";
-- botão cancelar.
-
-Ringing
-
-Mostrar:
-
-- nome;
-- avatar;
-- chamada recebida;
-- botão aceitar;
-- botão recusar.
-
-Connecting
-
-Mostrar:
-
-- conexão em andamento.
-
-Connected
-
-Mostrar:
-
-- duração;
-- nome;
-- avatar;
-- botão mute;
-- botão encerrar.
-
-Ended
-
-Retornar corretamente à tela anterior.
-
----
-
-FASE 18 — MUTE
-
-A chamada deverá possuir botão:
-
-Mute / Desmutar
-
-Quando o jogador pressionar:
-
-Mute
-
-o microfone deverá entrar no estado:
-
-muted = true
-
-Visualmente o botão deverá indicar que o jogador está mutado.
-
-Ao pressionar novamente:
-
-muted = false
-
-O microfone volta ao estado normal.
-
-IMPORTANTE:
-
-A UI deve ser separada da implementação de áudio.
-
-Conceitualmente:
-
-Call UI
- ↓
-CallService
- ↓
-Audio Engine
-
-Quando o áudio real for implementado posteriormente, o botão já estará preparado para chamar o serviço correspondente.
-
----
-
-FASE 19 — INTERFACE DA CHAMADA
-
-Criar uma interface visual dedicada para chamadas.
-
-Ela deverá funcionar tanto para:
-
-Telefone normal
-
-quanto:
-
-WhatsApp Audio
-
-A interface deverá poder receber:
-
-- tipo da chamada;
-- nome;
-- número;
-- avatar;
-- estado;
-- duração;
-- mute;
-- encerramento.
-
-Evitar duplicar completamente o componente.
-
-Idealmente:
-
-CallScreen
-
-recebe:
-
-callType
-
-e adapta pequenas diferenças visuais.
-
----
-
-FASE 20 — DIFERENCIAÇÃO VISUAL DOS TIPOS
-
-Embora a infraestrutura seja compartilhada, a interface pode indicar claramente o tipo de chamada.
-
-Por exemplo:
-
-Telefone
-Ligação telefônica
+"/home/android/RochaRoleplay/app/src/main/res/layout/activity_game_scoreboard.xml"
 
 e:
 
-WhatsApp
-Chamada de áudio
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_scoreboard_item.xml"
 
-Não adicionar vídeo ao WhatsApp.
+Somente depois de verificar referências.
 
-Não criar funcionalidades de câmera relacionadas à chamada.
+Não deixe:
+
+- adapters
+- models
+- bindings
+- imports
+- eventos
+
+órfãos.
+
+Porém não remova funções nativas fundamentais do protocolo SA-MP apenas porque não haverá mais esse layout Android.
 
 ---
 
-FASE 21 — PREPARAÇÃO PARA RESTRIÇÕES FUTURAS
+ETAPA 18 — WANTED
 
-No futuro, a gamemode poderá determinar regras diferentes.
+Remover:
 
-Por exemplo:
+"/home/android/RochaRoleplay/app/src/main/res/layout/activity_game_wanted.xml"
 
-Telefone normal
+e componentes exclusivamente associados.
 
-Poderá exigir:
+---
 
-- crédito;
-- saldo;
-- plano;
-- serviço telefônico.
+ETAPA 19 — PÁGINAS DO LAUNCHER A REMOVER
 
-WhatsApp
+Remover completamente as interfaces:
 
-Poderá exigir:
+"/home/android/RochaRoleplay/app/src/main/res/layout/fragment_information_page.xml"
 
-- internet;
-- dados móveis;
-- conexão.
+"/home/android/RochaRoleplay/app/src/main/res/layout/fragment_servers_page.xml"
 
-Essas regras NÃO devem ser implementadas agora.
+"/home/android/RochaRoleplay/app/src/main/res/layout/fragment_support_page.xml"
 
-Porém, a arquitetura deve permitir futuramente algo semelhante a:
+Antes de remover cada uma:
 
-canStartCall()
+- verificar Fragment
+- navigation
+- adapters
+- referências na MainActivity
+- menus
+- ViewPager
+- BottomNavigation
+- TabLayout
+- resources
 
-ou:
+Caso alguma função interna dessas páginas ainda seja útil em outra área, preserve somente a lógica.
 
-callPermission
+---
 
-A interface poderá futuramente receber da API:
+ETAPA 20 — OUTROS LAYOUTS A REMOVER
 
-allowed
-reason
+Analise e, quando confirmado que não serão mais necessários, remova:
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_chat_item.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_dialog_item.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_faq_item.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_files_selection.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_preview_item.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_rate_us.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_scoreboard_item.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_server1_connect.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_server_add.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_server_info.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_server_item.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_serverpicker_item.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_servers.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/layout_setting_version.xml"
+
+"/home/android/RochaRoleplay/app/src/main/res/layout/test.xml"
+
+Não considere essa lista como autorização para usar "rm" imediatamente.
+
+PARA CADA ARQUIVO:
+
+1. Pesquisar referências.
+2. Verificar classes relacionadas.
+3. Verificar adapters.
+4. Verificar recursos utilizados.
+5. Descobrir se existe lógica importante.
+6. Migrar lógica importante.
+7. Remover dependências obsoletas.
+8. Somente então excluir.
+
+---
+
+ETAPA 21 — LIMPEZA DE CÓDIGO
+
+Depois das migrações, execute uma limpeza completa.
+
+Remova:
+
+- imports sem uso
+- classes sem uso
+- métodos sem uso criados pelas interfaces removidas
+- adapters obsoletos
+- resources não utilizados
+- IDs inexistentes
+- menu items obsoletos
+- navigation destinations removidos
+- strings antigas
+- cores antigas sem utilização
+- drawables sem uso
+- ViewBindings antigos
+- DataBindings quebrados
+- referências no Manifest
+- código morto
+
+ATENÇÃO:
+
+Não remova bibliotecas, classes nativas ou código JNI apenas porque uma busca simples não encontrou referência Java/Kotlin.
+
+Projetos SA-MP possuem integrações nativas.
+
+Analise JNI, reflection, carregamento dinâmico e chamadas native antes de concluir que um componente está inutilizado.
+
+---
+
+ETAPA 22 — DOCUMENTO PERMANENTE DE ALTERAÇÕES
+
+Crie dentro do projeto:
+
+"/home/android/RochaRoleplay/ROCHA_ROLEPLAY_UPDATES.md"
+
+Esse documento será a memória técnica permanente do projeto.
+
+NUNCA apague o conteúdo existente desse arquivo em futuras alterações.
+
+Sempre acrescente novas informações.
+
+O documento deverá conter:
+
+Rocha Roleplay — Registro de Desenvolvimento
+
+Para cada execução/modificação registre:
+
+Data
+
+Objetivo da alteração
+
+Arquivos adicionados
+
+Arquivos modificados
+
+Arquivos removidos
+
+Recursos migrados
+
+Classes afetadas
+
+Alterações de lógica
+
+Configurações preservadas
+
+Configurações padrão
+
+Sistemas removidos
+
+Sistemas preservados para uso futuro
+
+Compatibilidade
+
+Problemas encontrados
+
+Decisões técnicas
+
+Pendências
+
+Próximos passos recomendados
+
+Registre especialmente que:
+
+A antiga interface de configurações foi removida, mas o sistema interno foi propositalmente preservado para desenvolvimento de um futuro painel in-game.
+
+Registre também os defaults:
+
+- SA-MP 0.3.7
+- System Keyboard ativo
+- Display FPS ativo
+- Full Screen ativo
+- Voice Chat ativo
+
+---
+
+ETAPA 23 — COMENTÁRIOS IMPORTANTES NO CÓDIGO
+
+Nos componentes cuja lógica foi preservada exclusivamente para desenvolvimento futuro, adicione comentários objetivos.
 
 Exemplo:
 
-allowed: false
-reason: "Sem créditos"
+"// Rocha Roleplay: manter esta lógica. Será utilizada pelo futuro painel de configurações in-game."
 
-A UI então exibirá a mensagem correspondente.
+Não encha o projeto de comentários desnecessários.
 
-Não codifique regras de negócio diretamente no frontend.
+Utilize somente onde houver risco real de alguém futuramente remover uma implementação importante por acreditar que está inutilizada.
 
 ---
 
-FASE 22 — CAMADA DE SERVIÇOS
+ETAPA 24 — BUILD E VALIDAÇÃO
 
-Revise a arquitetura e, quando necessário, crie serviços separados.
+Depois de concluir as alterações:
 
-Estrutura conceitual:
+1. Execute Clean.
+2. Execute build.
+3. Corrija TODOS os erros provocados pelas alterações.
+4. Não encerre o trabalho deixando erro de:
+   - resource missing
+   - unresolved reference
+   - binding inexistente
+   - XML inválido
+   - classe inexistente
+   - Activity não encontrada
+   - Manifest quebrado
+   - Gradle quebrado
 
-services/
-    api/
-    phone/
-    whatsapp/
-    contacts/
-    messages/
-    calls/
+Execute, conforme a estrutura do projeto:
 
-Não é obrigatório utilizar exatamente essa estrutura.
-
-O objetivo é separar:
-
-Interface
-
-de:
-
-Regra de comunicação
+"./gradlew clean"
 
 e:
 
-API externa
+"./gradlew assembleDebug"
 
-Evitar:
+ou tarefa equivalente disponível.
 
-Componente React
-↓
-fetch()
-↓
-endpoint
-↓
-tratamento de autenticação
+Se existir código nativo:
 
-espalhado por vários componentes.
-
-Centralize.
+Valide também a compilação nativa.
 
 ---
 
-FASE 23 — API CLIENT FUTURA
+ETAPA 25 — TESTES DE FLUXO
 
-Prepare uma camada central para comunicação futura com o RochaSystem.
+Verifique o seguinte fluxo:
 
-Conceitualmente:
+ABRIR APP
 
-apiClient
+→ Home nova aparece corretamente
 
-Ela poderá posteriormente cuidar de:
+→ não existe mais botão/página de configurações
 
-- URL base;
-- autenticação;
-- headers;
-- requests;
-- respostas;
-- erros;
-- timeout;
-- reconexão;
-- WebSocket;
-- eventos.
+→ botão Loja informa "Loja em desenvolvimento."
 
-Neste momento, não invente a API.
+→ Rocha Roleplay aparece como servidor
 
-Se os endpoints ainda não existirem, deixe interfaces/contratos preparados sem fingir que a integração real está funcionando.
+→ IP não aparece visualmente
 
----
+→ seletor abre sobre a Home
 
-FASE 24 — EVENTOS EM TEMPO REAL
+→ fundo atrás do seletor permanece visível/transparente
 
-Como mensagens e chamadas futuramente precisarão funcionar em tempo real, a arquitetura deverá estar preparada para receber eventos.
+→ botão Jogar abre Connect Screen
 
-Exemplos futuros:
+→ cliente inicia
 
-message:new
-message:received
+→ Loading Screen nova aparece no momento correto
 
-call:incoming
-call:ringing
-call:accepted
-call:rejected
-call:ended
+→ jogo carrega
 
-contact:updated
+→ Fullscreen está ativo
 
-Não é necessário implementar o servidor desses eventos agora.
+→ FPS está ativo
 
-Porém, evite criar uma arquitetura que dependa exclusivamente de polling constante.
+→ System Keyboard está ativo
 
-Quando a API real for criada, poderá ser utilizado:
+→ Voice Chat está ativo
 
-- WebSocket;
-- SSE;
-- outro mecanismo apropriado.
+Teste também:
+
+- voltar
+- abrir e fechar seletor
+- abrir Loja várias vezes
+- iniciar jogo novamente
+- rotação, caso suportada
+- diferentes resoluções
+- Android com navigation bar
+- Android com gesture navigation
 
 ---
 
-FASE 25 — TRATAMENTO DE ESTADOS
+ETAPA 26 — RESPONSIVIDADE
 
-Revise os componentes para evitar estados inconsistentes.
+A interface copiada de "/home/android/Rocha-Roleplay" deve manter sua aparência original, mas funcionar corretamente em diferentes tamanhos de tela.
 
-Exemplos:
+Não altere o visual desnecessariamente.
 
-- botão enviar pressionado várias vezes;
-- chamada sendo iniciada duas vezes;
-- múltiplas telas de chamada abertas;
-- dois listeners para o mesmo evento;
-- timer de chamada continuando depois que ela terminou;
-- áudio continuando depois que a tela foi fechada;
-- componente desmontado ainda executando callbacks.
+Corrija somente problemas reais como:
 
-Garanta cleanup adequado.
+- elementos cortados
+- botões fora da tela
+- sobreposição
+- textos quebrados
+- incompatibilidade com notch
+- incompatibilidade com status bar
+- navigation bar cobrindo botão
 
----
-
-FASE 26 — TIMER DA CHAMADA
-
-Quando uma chamada estiver:
-
-connected
-
-iniciar contador de duração.
-
-Exemplo:
-
-00:01
-00:02
-00:03
-
-Ao terminar a chamada:
-
-- parar timer;
-- limpar estado;
-- não continuar contando em background;
-- liberar listeners relacionados.
-
-Não utilize múltiplos timers para a mesma chamada.
+Priorize edge-to-edge/fullscreen corretamente.
 
 ---
 
-FASE 27 — HISTÓRICO VISUAL DE CHAMADAS
+ETAPA 27 — NÃO FAZER
 
-Prepare a interface do histórico para suportar posteriormente:
+NÃO:
 
-- chamada realizada;
-- chamada recebida;
-- chamada perdida;
-- chamada recusada;
-- duração;
-- horário;
-- tipo.
-
-O tipo poderá ser:
-
-phone
-whatsapp
-
-Neste momento, não invente dados reais.
-
-A interface deve estar preparada para receber os dados da API.
-
----
-
-FASE 28 — EXPERIÊNCIA DO WHATSAPP
-
-Faça uma revisão geral da interface do WhatsApp.
-
-O aplicativo deve parecer um sistema único e coerente.
-
-Verifique:
-
-- navegação;
-- animações;
-- botões;
-- espaçamentos;
-- cabeçalhos;
-- busca;
-- conversas;
-- contatos;
-- perfil;
-- chamadas;
-- estados vazios;
-- loading;
-- erros.
-
-Evite telas desconectadas visualmente.
+- redesenhar a Home por conta própria
+- mudar a identidade visual sem necessidade
+- transformar preto/cinza/branco em outra paleta
+- apagar a lógica de configurações
+- deixar arquivo órfão
+- deixar import morto
+- deixar referências quebradas
+- criar sistema duplicado se já existir um
+- mostrar IP do servidor
+- usar "Nativo RPG"
+- iniciar o jogo diretamente ignorando Connect Screen
+- fingir progresso através de sleeps
+- apagar código nativo sem entender sua função
+- remover sistema de Voice Chat
+- remover sistema de fullscreen
+- remover sistema de FPS
+- remover sistema de teclado
+- excluir dependência apenas porque aparentemente não está sendo utilizada
 
 ---
 
-FASE 29 — ESTADOS VAZIOS
+ETAPA 28 — PRINCÍPIO DE REUTILIZAÇÃO
 
-Criar estados vazios apropriados.
+Sempre utilize esta ordem de prioridade:
 
-Exemplos:
+1. Reutilizar recurso já existente no projeto atual.
+2. Reutilizar/migrar recurso existente em "/home/android/Rocha-Roleplay".
+3. Adaptar componente existente.
+4. Criar um componente novo SOMENTE quando ele realmente não existir nos dois projetos.
 
-Sem conversas
+Não replique código sem necessidade.
 
-Mostrar uma mensagem adequada.
-
-Sem contatos
-
-Mostrar:
-
-Nenhum contato encontrado.
-
-com opção para adicionar contato.
-
-Nenhum resultado na busca
-
-Mostrar estado específico.
-
-Histórico vazio
-
-Mostrar estado apropriado.
-
-Não preencher telas vazias com dados falsos.
+Se dois sistemas realizam a mesma função, escolha a implementação mais completa e integre-a ao projeto.
 
 ---
 
-FASE 30 — LOADING E ERROS
+ETAPA 29 — SEGURANÇA ANTES DE ALTERAR
 
-Todas as operações que futuramente dependerão da API deverão possuir estados:
+Antes de começar, faça uma cópia de segurança ou commit Git do estado atual.
 
-idle
-loading
-success
-error
+Caso o projeto utilize Git, crie um commit de segurança antes da migração.
 
-Evitar:
-
-- loading infinito;
-- botão travado;
-- tela branca;
-- erro silencioso;
-- componentes quebrados.
-
-Mensagens de erro devem ser compreensíveis.
-
-Nunca exibir:
-
-- stack trace;
-- erro interno;
-- informações sensíveis;
-- detalhes técnicos da API.
+Não sobrescreva arquivos importantes sem ter como comparar/restaurar.
 
 ---
 
-FASE 31 — LIMPEZA DE CÓDIGO
+ETAPA 30 — RESULTADO FINAL
 
-Depois de implementar as alterações:
+Ao terminar, entregue um resumo contendo:
 
-procure por:
+1. Tudo que foi alterado.
+2. Tudo que foi removido.
+3. Tudo que foi migrado.
+4. Tudo que foi criado.
+5. Sistemas que foram preservados.
+6. Configurações padrão aplicadas.
+7. Mudanças no fluxo de inicialização.
+8. Mudanças no cliente SA-MP.
+9. Arquivos que ainda precisam de atenção.
+10. Resultado da compilação.
+11. Erros encontrados e corrigidos.
+12. Pendências que não puderam ser concluídas.
 
-- componentes duplicados;
-- funções duplicadas;
-- hooks duplicados;
-- listeners duplicados;
-- timers;
-- intervalos;
-- imports inutilizados;
-- estados inutilizados;
-- código morto;
-- mockups esquecidos;
-- componentes antigos;
-- lógica espalhada;
-- formatação duplicada de telefone.
+Também atualize obrigatoriamente:
 
-Não faça uma refatoração gigante sem necessidade.
+"ROCHA_ROLEPLAY_UPDATES.md"
 
-A prioridade é manter o sistema estável.
+Não considere a tarefa concluída até que o projeto compile novamente ou até que exista uma limitação externa real claramente identificada e documentada.
 
----
+PRINCÍPIO PRINCIPAL:
 
-FASE 32 — TESTE DO CELULAR
+Não quero apenas trocar XMLs.
 
-Teste:
+Quero uma migração estrutural completa e limpa.
 
-- abrir;
-- fechar;
-- duplo clique fora;
-- diferentes tamanhos;
-- redimensionamento;
-- navegação;
-- troca de idioma;
-- troca de tema;
-- wallpaper.
-
-Nenhuma parte deve ficar cortada.
-
----
-
-FASE 33 — TESTE DO WHATSAPP
-
-Teste visualmente:
-
-- abrir;
-- entrar em contatos;
-- pesquisar;
-- abrir contato;
-- criar contato;
-- voltar;
-- abrir conversa;
-- abrir perfil;
-- voltar;
-- iniciar chamada;
-- visualizar tela de chamada;
-- mute;
-- desmutar;
-- encerrar chamada.
-
-Não deve haver:
-
-- modal indevido;
-- tela sobreposta incorretamente;
-- botão sem ação;
-- navegação quebrada.
-
----
-
-FASE 34 — TESTE DOS DOIS TIPOS DE CHAMADA
-
-A arquitetura deve permitir:
-
-Telefone
-
-Phone → CallService → Phone Call
-
-WhatsApp
-
-WhatsApp → CallService → WhatsApp Audio Call
-
-Os dois devem compartilhar a infraestrutura.
-
-O WhatsApp não deve possuir vídeo.
-
----
-
-FASE 35 — TESTE DE MUTE
-
-Verifique:
-
-1. chamada iniciada;
-2. chamada conectada;
-3. botão mute disponível;
-4. pressionar mute;
-5. estado visual alterado;
-6. pressionar novamente;
-7. estado visual restaurado;
-8. encerrar chamada;
-9. estado de mute limpo.
-
----
-
-FASE 36 — PREPARAÇÃO PARA O ROCHASYSTEM
-
-Antes de finalizar, revise toda a arquitetura pensando na futura integração:
-
-ROCHA ROLEPLAY
-       ↓
-Gamemode
-       ↓
-RochaSystem API
-       ↓
-CEF / Launcher
-       ↓
-Celular
-       ↓
-WhatsApp / Telefone
-       ↓
-CallService / MessageService / ContactService
-
-O frontend não deve precisar ser refeito quando a API real estiver pronta.
-
-Apenas a implementação dos serviços/adapters deverá ser conectada à API real.
-
----
-
-FASE 37 — NÃO IMPLEMENTAR AGORA
-
-Não implemente neste prompt:
-
-- scriptfiles;
-- persistência na gamemode;
-- banco da gamemode;
-- saldo bancário;
-- PIX real;
-- OLX backend;
-- chamadas 190;
-- chamadas 192;
-- regras de crédito;
-- regras de internet;
-- autenticação SA-MP;
-- integração direta com Pawn;
-- sistema de áudio definitivo;
-- WebRTC definitivo;
-- servidor de voz;
-- armazenamento de fotos;
-- galeria;
-- câmera;
-- chamadas de vídeo.
-
-Esses sistemas serão tratados posteriormente.
-
-Especialmente:
-
-WhatsApp = somente áudio.
-
-Não adicionar vídeo.
-
----
-
-FASE 38 — CRITÉRIO DE CONCLUSÃO
-
-Não considere o trabalho concluído apenas porque a interface parece bonita.
-
-Uma fase somente está concluída quando:
-
-- código implementado;
-- interface funcionando;
-- navegação funcionando;
-- estados funcionando;
-- tratamento de erro implementado;
-- cleanup realizado;
-- nenhuma regressão conhecida;
-- arquitetura preparada para integração futura.
-
-Se alguma parte depender da API que ainda não existe, não simule como se fosse uma integração real.
-
-Crie a interface e a camada de serviço necessária para receber a futura implementação.
-
----
-
-REGRA FINAL DE EXECUÇÃO
-
-A ordem é obrigatória:
-
-Fase 0
-↓
-Fase 1
-↓
-Fase 2
-↓
-Fase 3
-↓
-Fase 4
-↓
-Fase 5
-↓
-Fase 6
-↓
-Fase 7
-↓
-Fase 8
-↓
-Fase 9
-↓
-Fase 10
-↓
-Fase 11
-↓
-Fase 12
-↓
-Fase 13
-↓
-Fase 14
-↓
-Fase 15
-↓
-Fase 16
-↓
-Fase 17
-↓
-Fase 18
-↓
-Fase 19
-↓
-Fase 20
-↓
-Fase 21
-↓
-Fase 22
-↓
-Fase 23
-↓
-Fase 24
-↓
-Fase 25
-↓
-Fase 26
-↓
-Fase 27
-↓
-Fase 28
-↓
-Fase 29
-↓
-Fase 30
-↓
-Fase 31
-↓
-Fase 32
-↓
-Fase 33
-↓
-Fase 34
-↓
-Fase 35
-↓
-Fase 36
-↓
-Fase 37
-↓
-Fase 38
-
-Não pule fases.
-
-Não deixe uma fase parcialmente implementada para começar outra.
-
-Execute quantas fases conseguir com segurança em uma única chamada, mas nunca sacrifique qualidade para aumentar a quantidade.
-
-Quando não conseguir continuar com segurança:
-
-1. pare;
-2. informe onde parou;
-3. informe o que foi concluído;
-4. informe o que foi testado;
-5. informe eventuais problemas;
-6. pergunte se pode prosseguir.
-
-Ao continuar, releia este prompt e retome exatamente da fase seguinte.
-
-Não perca o contexto arquitetural definido neste documento.
-
-O objetivo final desta etapa é possuir um celular CEF moderno, organizado, responsivo e preparado para ser conectado ao RochaSystem, especialmente com uma arquitetura correta para WhatsApp, mensagens, contatos, telefone e chamadas de áudio, sem criar dependências falsas ou soluções temporárias que posteriormente precisem ser totalmente refeitas.
+A interface antiga deve desaparecer onde foi solicitado, a nova interface deve utilizar o design real do projeto "/home/android/Rocha-Roleplay", as funcionalidades importantes devem continuar existindo internamente, e nenhum componente inútil ou dependência quebrada deverá ser deixado para trás.
