@@ -1,0 +1,1465 @@
+Você é responsável por realizar uma migração técnica cuidadosa de um cliente Android SA-MP existente.
+
+LEIA ESTA ESPECIFICAÇÃO INTEIRA ANTES DE ALTERAR QUALQUER ARQUIVO.
+
+NÃO comece fazendo alterações aleatórias.
+
+Existem DOIS projetos.
+
+==================================================
+1. PROJETO PRINCIPAL — ROCHA ROLEPLAY
+==================================================
+
+Caminho:
+
+/home/android/Rocha-Roleplay/
+
+Bibliotecas nativas atuais:
+
+/home/android/Rocha-Roleplay/app/src/main/jniLib
+
+Este é o projeto PRINCIPAL.
+
+Atualmente ele funciona em 32 bits.
+
+Ele deve continuar sendo a fonte de verdade para:
+
+- interface;
+- comportamento;
+- launcher;
+- fluxo de inicialização;
+- sistema de nickname;
+- informações do servidor;
+- conexão com o servidor;
+- loading screens;
+- login;
+- WebView;
+- CEF;
+- HTML;
+- JavaScript;
+- SCSS/CSS;
+- integração com SA-MP Mobile;
+- telas XML;
+- assets;
+- cliente;
+- arquivos de dados;
+- funcionamento geral.
+
+O resultado final deve ser ESTE projeto evoluído para 32/64 bits.
+
+NÃO transforme o Rocha no projeto de referência.
+
+==================================================
+2. PROJETO DE REFERÊNCIA TÉCNICA
+==================================================
+
+Caminho:
+
+/home/android/gradle/
+
+Bibliotecas:
+
+/home/android/gradle/app/src/main/jniLibs/
+
+Código C++:
+
+/home/android/gradle/app/src/main/cpp/
+
+Multiplayer:
+
+/home/android/gradle/app/src/main/cpp/multiplayer/
+
+Este projeto já possui suporte a:
+
+- armeabi-v7a;
+- arm64-v8a.
+
+Ele deve ser tratado como:
+
+REFERÊNCIA TÉCNICA / BASE DO SUPORTE ARM64.
+
+Ele NÃO deve substituir o Rocha.
+
+Sua função é mostrar como a mesma base do GTA/SA-MP foi adaptada para ARM64.
+
+==================================================
+3. INFORMAÇÃO IMPORTANTE JÁ DESCOBERTA
+==================================================
+
+Antes desta tarefa foram comparadas as versões ARM32 dos dois projetos.
+
+Foram observados fortes indícios de que:
+
+libGTASA.so ARM32 do projeto Rocha
+
+e
+
+libGTASA.so ARM32 do projeto de referência
+
+são exatamente a mesma base.
+
+Também:
+
+libSAMP.so ARM32 do Rocha
+
+e
+
+libSAMP.so ARM32 do projeto de referência
+
+foram observadas como pertencentes à mesma base.
+
+NÃO confie cegamente nesta informação.
+
+Antes de começar a migração, CONFIRME você mesmo utilizando:
+
+sha256sum
+cmp
+file
+readelf
+
+Faça a comparação diretamente.
+
+Se os hashes forem iguais, registre isso no relatório técnico.
+
+==================================================
+4. OBJETIVO FINAL
+==================================================
+
+O Rocha Roleplay deve gerar UM APK compatível nativamente com:
+
+armeabi-v7a
+arm64-v8a
+
+A versão 32 bits existente NÃO pode ser quebrada.
+
+A versão ARM64 deve utilizar implementação nativa real AArch64.
+
+É PROIBIDO:
+
+- rodar library ARM32 dentro de processo ARM64;
+- colocar ELF32 em arm64-v8a;
+- mascarar arquivo 32 bits como 64 bits;
+- usar fallback silencioso para ARM32;
+- remover ARM64 apenas para fazer o APK iniciar;
+- trocar o GTA por outro GTA;
+- utilizar outro cliente só porque funciona em ARM64.
+
+O objetivo é:
+
+MESMO ROCHA ROLEPLAY
++
+MESMO COMPORTAMENTO
++
+SUPORTE NATIVO ARM64.
+
+==================================================
+5. PACKAGE FINAL
+==================================================
+
+O package/applicationId/namespace final deve ser:
+
+com.rocha.game
+
+Não quero manter:
+
+com.aurora.game
+
+Nem quero manter packages antigos desnecessários do projeto base.
+
+Faça a migração completa e consistente.
+
+Procure e atualize corretamente:
+
+- applicationId;
+- namespace;
+- AndroidManifest.xml;
+- diretórios Java/Kotlin;
+- imports;
+- package declarations;
+- providers;
+- authorities;
+- intents;
+- deep links;
+- services;
+- receivers;
+- FileProvider;
+- BuildConfig;
+- JNI;
+- código C/C++;
+- nomes JNI exportados;
+- caminhos hardcoded;
+- Android/data;
+- data/data;
+- configurações;
+- assets;
+- strings;
+- arquivos XML.
+
+Exemplo:
+
+Se existir:
+
+Java_com_aurora_game_SAMP_initializeSAMP
+
+a implementação destinada ao novo package deverá ser adaptada corretamente para:
+
+Java_com_rocha_game_SAMP_initializeSAMP
+
+ou substituída por um mecanismo JNI mais robusto, como RegisterNatives, se isso for tecnicamente mais correto.
+
+Mas NÃO deixe código dependendo de:
+
+com.aurora.game
+
+Depois da migração execute uma pesquisa completa:
+
+grep -Rni "com.aurora.game"
+
+e elimine qualquer referência funcional restante.
+
+Também procure qualquer outro package antigo utilizado pela base.
+
+==================================================
+6. NÃO COPIAR O PROJETO DE REFERÊNCIA INTEIRO
+==================================================
+
+NÃO faça:
+
+cp -r /home/android/gradle/* /home/android/Rocha-Roleplay/
+
+Isso seria incorreto.
+
+Você deve estudar o projeto de referência e transferir SOMENTE:
+
+- arquitetura ARM64;
+- código nativo necessário;
+- implementação multiplayer necessária;
+- sistema CMake necessário;
+- bibliotecas ARM64 necessárias;
+- hooks compatíveis;
+- bridges JNI necessárias;
+- dependências necessárias;
+- correções específicas de AArch64.
+
+O launcher, visual e fluxo continuam sendo do Rocha.
+
+==================================================
+7. LIBGTASA ARM64
+==================================================
+
+O projeto de referência possui:
+
+/home/android/gradle/app/src/main/jniLibs/armeabi-v7a/libGTASA.so
+
+e:
+
+/home/android/gradle/app/src/main/jniLibs/arm64-v8a/libGTASA.so
+
+Analise as duas.
+
+Verifique:
+
+file
+readelf -h
+readelf -d
+readelf -Ws
+nm -D
+strings
+
+Compare:
+
+- símbolos;
+- funções;
+- DT_NEEDED;
+- RenderWare;
+- CGame;
+- CPed;
+- CVehicle;
+- CWorld;
+- câmera;
+- áudio;
+- texturas;
+- arquivos DATA;
+- JNI;
+- strings de versão;
+- estrutura do jogo.
+
+O ARM64 deve ser usado como contraparte técnica do GTASA ARM32.
+
+NÃO tente converter o binário libGTASA.so ARM32 manualmente para ARM64.
+
+NÃO faça patch binário cego.
+
+Se a versão ARM64 funcional já existe no projeto de referência e corresponde à mesma base, utilize-a.
+
+Depois adapte tudo ao ambiente do Rocha.
+
+Antes de considerar libGTASA concluída, confirme:
+
+- ELF64;
+- Machine AArch64;
+- todas as dependências encontradas;
+- nenhuma dependência ARM32;
+- nenhuma referência ao package Aurora;
+- nenhum caminho inexistente;
+- carregamento correto no Rocha.
+
+==================================================
+8. DIFERENÇAS DAS DEPENDÊNCIAS GTASA
+==================================================
+
+O projeto de referência possui diferenças entre os ABIs.
+
+Exemplo observado:
+
+ARM32 utiliza componentes como:
+
+libImmEmulatorJ.so
+libOpenAL32.so
+
+ARM64 possui:
+
+libOpenAL64.so
+
+Além de:
+
+libSCAnd.so
+libbass.so
+libbass_ssl.so
+libluajit-5.1.so
+libGTASA.so
+
+Existe também:
+
+libmonetloader.so
+
+NÃO assuma a função de nenhuma dessas bibliotecas.
+
+Descubra primeiro quem carrega cada uma e em qual ABI.
+
+Especialmente analise:
+
+/home/android/gradle/app/src/main/java/com/aurora/game/GTASA.java
+
+Veja os blocos completos em volta de:
+
+System.loadLibrary(...)
+
+Descubra precisamente:
+
+- o que é carregado em ARM32;
+- o que é carregado em ARM64;
+- quando monetloader é utilizado;
+- quando ImmEmulatorJ é utilizado;
+- quando OpenAL64 é utilizado;
+- quais componentes são opcionais.
+
+Só depois replique a lógica necessária no Rocha.
+
+==================================================
+9. LIBSAMP LEGADA E LIBMULTIPLAYER
+==================================================
+
+Este ponto é MUITO IMPORTANTE.
+
+O projeto de referência contém:
+
+armeabi-v7a/libSAMP.so
+
+Porém o sistema atual também possui código-fonte completo em:
+
+/home/android/gradle/app/src/main/cpp/multiplayer/
+
+E ele gera:
+
+libmultiplayer.so
+
+O arquivo:
+
+/home/android/gradle/app/src/main/cpp/multiplayer/CMakeLists.txt
+
+possui uma target semelhante a:
+
+add_library(multiplayer SHARED ${SOURCES})
+
+O projeto já foi compilado com sucesso gerando:
+
+armeabi-v7a/libmultiplayer.so
+
+e:
+
+arm64-v8a/libmultiplayer.so
+
+Portanto:
+
+NÃO tente inventar uma libSAMP.so ARM64 convertendo o binário ARM32.
+
+A implementação ARM64 deve ser baseada no CÓDIGO-FONTE multiplayer existente.
+
+Analise completamente:
+
+/home/android/gradle/app/src/main/cpp/multiplayer/
+
+Incluindo:
+
+- main.cpp;
+- game;
+- hooks;
+- patches;
+- net;
+- RakNet;
+- SAMPRPC;
+- samp_auth;
+- GUI;
+- chat;
+- dialogs;
+- textdraw;
+- player;
+- vehicle;
+- actor;
+- object;
+- voice;
+- Opus;
+- BASS;
+- ImGui;
+- ShadowHook;
+- JNI;
+- util;
+- settings.
+
+Esse source já contém tratamento para ARM32 e ARM64.
+
+Utilize essa implementação como REFERÊNCIA PRINCIPAL para o multiplayer ARM64.
+
+==================================================
+10. NÃO SUBSTITUIR O MULTIPLAYER 32 BITS SEM NECESSIDADE
+==================================================
+
+O Rocha 32-bit já funciona.
+
+Portanto não destrua imediatamente o fluxo ARM32 atual.
+
+Inicialmente:
+
+armeabi-v7a = preservar comportamento funcional do Rocha.
+
+arm64-v8a = implementar novo suporte ARM64.
+
+Se quiser futuramente utilizar libmultiplayer.so também no ARM32, só faça isso depois de comprovar que:
+
+- conexão funciona igual;
+- RPC funciona igual;
+- RakNet funciona igual;
+- login funciona igual;
+- dialogs funcionam igual;
+- textdraw funciona igual;
+- CEF funciona igual;
+- servidor funciona igual;
+- loading funciona igual;
+- não existe regressão.
+
+Não troque uma implementação funcional simplesmente porque a outra é mais nova.
+
+==================================================
+11. FLUXO DO ROCHA TEM PRIORIDADE ABSOLUTA
+==================================================
+
+Na tentativa anterior de ARM64 aconteceu um erro grave:
+
+o jogo abriu, mas abriu de maneira diferente da versão Rocha 32-bit.
+
+Isso NÃO pode acontecer novamente.
+
+O ARM64 deve reproduzir o fluxo original.
+
+Exemplo:
+
+Launcher Rocha
+↓
+usuário configura nickname
+↓
+usuário toca em JOGAR
+↓
+loading do cliente
+↓
+inicialização GTA/SA-MP
+↓
+loading screen do servidor
+↓
+conexão ao servidor Linux
+↓
+tela de login existente
+↓
+interfaces existentes
+↓
+entrada no Rocha Roleplay
+
+NÃO utilizar:
+
+- Home do Aurora;
+- loading do Aurora;
+- login do Aurora;
+- launcher do Aurora;
+- servidor do Aurora;
+- configurações do Aurora;
+- assets visuais do Aurora.
+
+O projeto `/home/android/gradle/` fornece TECNOLOGIA.
+
+O projeto `/home/android/Rocha-Roleplay/` fornece a EXPERIÊNCIA FINAL.
+
+==================================================
+12. SERVIDOR
+==================================================
+
+O launcher NÃO deve mais funcionar como host local.
+
+O objetivo é iniciar o cliente e conectar ao servidor Rocha Roleplay hospedado remotamente em Linux.
+
+Preserve:
+
+- IP/configuração existente do Rocha;
+- porta existente;
+- nickname;
+- parâmetros necessários;
+- autenticação;
+- informações do servidor.
+
+NÃO inicialize servidor SA-MP local no aparelho.
+
+NÃO crie servidor Pawn local.
+
+==================================================
+13. REMOVER FUNCIONALIDADES ANTIGAS DO LAUNCHER
+==================================================
+
+O projeto original nasceu como launcher multifuncional.
+
+Ele possuía funcionalidades que NÃO fazem mais parte do objetivo atual.
+
+Remova completamente os sistemas relacionados a coisas como:
+
+- compilador Pawn;
+- editor Pawn;
+- criação de gamemode local;
+- servidor SA-MP local;
+- hospedagem local;
+- ferramentas administrativas antigas;
+- sistemas antigos de plugins;
+- telas antigas sem função no Rocha atual;
+- créditos antigos desnecessários;
+- loja antiga desnecessária;
+- páginas extras do antigo launcher;
+- ferramentas que não fazem parte da execução do Rocha.
+
+Não basta esconder botões.
+
+Remova corretamente:
+
+- Activities;
+- Fragments;
+- Services;
+- classes Java/Kotlin;
+- código C/C++;
+- XML;
+- menus;
+- navigation graph;
+- adapters;
+- listeners;
+- intents;
+- receivers;
+- permissões;
+- dependências Gradle;
+- assets;
+- strings;
+- recursos;
+- bibliotecas nativas;
+- referências.
+
+MAS NÃO APAGUE `.so` NO ESCURO.
+
+Antes de remover uma library:
+
+1. descubra quem a utiliza;
+2. procure System.loadLibrary;
+3. procure dlopen;
+4. verifique DT_NEEDED;
+5. procure JNI;
+6. procure CMake;
+7. confirme se pertence exclusivamente ao sistema removido.
+
+Somente depois delete.
+
+Bibliotecas necessárias para:
+
+- GTA;
+- multiplayer;
+- áudio;
+- voice;
+- CEF;
+- WebView;
+- SA-MP Mobile;
+- login;
+- rendering;
+
+devem ser preservadas.
+
+==================================================
+14. LAUNCHER FINAL DEVE SER SIMPLES
+==================================================
+
+Depois da limpeza, o aplicativo deve ser essencialmente um launcher do Rocha Roleplay.
+
+Preserve somente funcionalidades úteis como:
+
+- Home;
+- logo/identidade Rocha;
+- informações do servidor;
+- status;
+- quantidade de jogadores quando disponível;
+- nickname;
+- botão Jogar;
+- download/verificação dos arquivos do cliente;
+- atualização quando necessária;
+- loading;
+- telas necessárias;
+- login;
+- execução do jogo.
+
+Não reintroduza páginas desnecessárias.
+
+==================================================
+15. CEF / WEBVIEW / SAMP MOBILE
+==================================================
+
+O projeto Rocha atual já possui suporte interno para interface web.
+
+Esse suporte é OBRIGATÓRIO.
+
+Preserve e adapte corretamente todo o sistema relacionado a:
+
+- CEF;
+- WebView;
+- SA-MP Mobile;
+- HTML;
+- JavaScript;
+- SCSS/CSS;
+- arquivos web;
+- bridges JavaScript;
+- interfaces HTML;
+- callbacks;
+- comunicação Java ↔ Web;
+- comunicação C++ ↔ Java;
+- comunicação do multiplayer com a UI;
+- arquivos locais carregados pelo WebView/CEF.
+
+NÃO substitua as interfaces web existentes por ImGui só porque o projeto de referência possui ImGui.
+
+Se o Rocha já utiliza HTML/XML/WebView para determinada tela, mantenha esse comportamento.
+
+ImGui do projeto de referência só deve ser trazido quando for realmente necessário para o funcionamento técnico do multiplayer.
+
+Não altere a experiência visual do Rocha.
+
+==================================================
+16. TELAS XML
+==================================================
+
+As telas existentes do Rocha devem continuar funcionando.
+
+Isso inclui especialmente:
+
+- launcher;
+- loading do cliente;
+- loading do servidor;
+- login;
+- telas conectadas ao cliente;
+- telas necessárias para autenticação.
+
+Não recrie essas telas usando as do Aurora.
+
+Se alguma classe nativa nova precisar chamar uma Activity/View do Rocha:
+
+adapte a bridge.
+
+Não adapte a tela Rocha ao Aurora.
+
+==================================================
+17. DIRETÓRIOS E ARQUIVOS DO CLIENTE
+==================================================
+
+O cliente ARM64 deve utilizar os MESMOS dados funcionais utilizados pelo Rocha.
+
+Não copie hardcodes do projeto de referência como:
+
+/Android/data/com.aurora.game/
+
+ou qualquer outro package doador.
+
+Procure por:
+
+/Android/data/
+/data/data/
+/storage/emulated/0/
+getExternalFilesDir
+getFilesDir
+Environment.getExternalStorageDirectory
+package name hardcoded
+
+Também procure essas strings em:
+
+- Java;
+- Kotlin;
+- C++;
+- headers;
+- XML;
+- Gradle;
+- CMake;
+- `.so`, usando strings.
+
+O source do Rocha deve determinar onde os dados do cliente ficam.
+
+Como o novo applicationId será:
+
+com.rocha.game
+
+avalie cuidadosamente o impacto da mudança do package sobre:
+
+Android/data/<package>
+
+Se for necessário migrar dados existentes, implemente uma migração segura.
+
+NÃO adote diretório do Aurora.
+
+==================================================
+18. NÃO PATCHAR STRINGS EM .SO CEGAMENTE
+==================================================
+
+Se encontrar em um `.so` algo como:
+
+com.aurora.game
+
+NÃO abra o binário e simplesmente substitua os bytes.
+
+Primeiro procure:
+
+- código-fonte correspondente;
+- definição no C++;
+- Java;
+- JNI;
+- CMake;
+- configuração.
+
+Faça a alteração na fonte e recompile.
+
+Patch binário deve ser último recurso e somente se for tecnicamente seguro e documentado.
+
+==================================================
+19. COMPONENTE 32-BIT SEM VERSÃO ARM64
+==================================================
+
+Se encontrar algum módulo necessário que exista somente em ARM32:
+
+NÃO tente carregá-lo no ARM64.
+
+Faça nesta ordem:
+
+1. procure implementação ARM64 dentro de `/home/android/gradle/`;
+2. procure código-fonte dentro do próprio projeto;
+3. veja se ele pode ser recompilado;
+4. identifique o projeto upstream;
+5. se houver acesso à internet, procure repositório oficial/GitHub;
+6. procure versão ARM64 compatível;
+7. adapte ao Rocha.
+
+Não use outra biblioteca totalmente diferente sem justificar.
+
+Documente qualquer substituição.
+
+==================================================
+20. CMAKE E NDK
+==================================================
+
+O projeto de referência já possui infraestrutura CMake funcional.
+
+Analise:
+
+/home/android/gradle/app/src/main/cpp/CMakeLists.txt
+
+e:
+
+/home/android/gradle/app/src/main/cpp/multiplayer/CMakeLists.txt
+
+Não copie cegamente.
+
+Transfira apenas o necessário para compilar o multiplayer dentro do Rocha.
+
+Garanta configuração de:
+
+armeabi-v7a
+arm64-v8a
+
+Analise também:
+
+- minSdk;
+- targetSdk;
+- NDK;
+- STL;
+- prefab;
+- shadowhook;
+- opus;
+- bass;
+- include directories;
+- compile definitions;
+- flags específicos por ABI.
+
+Não introduza flags ARM32 em ARM64.
+
+Procure blocos como:
+
+#if defined(__arm__)
+#if defined(__aarch64__)
+#ifdef __arm__
+#ifdef __aarch64__
+
+e valide ambos.
+
+==================================================
+21. HOOKS E OFFSETS
+==================================================
+
+ARM32 e ARM64 possuem:
+
+- tamanho de ponteiro diferente;
+- convenção de chamada diferente;
+- registradores diferentes;
+- instruções diferentes;
+- offsets potencialmente diferentes.
+
+Portanto:
+
+NÃO reutilize offsets ARM32 cegamente no ARM64.
+
+NÃO converta endereço Thumb em endereço ARM64 por cálculo simples.
+
+Use o código ARM64 já existente no projeto de referência.
+
+Especialmente para:
+
+- hooks;
+- patches;
+- offsets GTA;
+- trampolines;
+- ShadowHook;
+- armhook;
+- ponteiros;
+- uintptr_t;
+- funções RenderWare.
+
+Todo código que assumir ponteiro de 32 bits deve ser revisado.
+
+==================================================
+22. JNI
+==================================================
+
+Revise integralmente as bridges JNI.
+
+O package final é:
+
+com.rocha.game
+
+Verifique:
+
+- SAMP.java;
+- GTASA.java;
+- Activities;
+- classes de UI;
+- native declarations;
+- JNIEXPORT;
+- FindClass;
+- GetMethodID;
+- GetFieldID;
+- signatures;
+- callbacks.
+
+Não deixe:
+
+Java_com_aurora_game_...
+
+sem motivo.
+
+Após o rename, os métodos Java e C++ precisam continuar combinando exatamente.
+
+==================================================
+23. UM SUBSISTEMA POR VEZ
+==================================================
+
+REGRA OBRIGATÓRIA.
+
+NÃO altere GTASA, multiplayer, launcher, CEF e package simultaneamente.
+
+Trabalhe sequencialmente.
+
+Uma etapa só pode ser considerada concluída quando:
+
+- código estiver terminado;
+- projeto compilar;
+- dependências estiverem corretas;
+- não houver erro conhecido daquela etapa;
+- testes possíveis tiverem sido executados;
+- alterações estiverem documentadas.
+
+Depois disso:
+
+PARE.
+
+Mostre:
+
+- o que foi alterado;
+- quais arquivos;
+- o que foi testado;
+- resultado;
+- erros restantes;
+- próximos passos.
+
+E PERGUNTE AO USUÁRIO SE PODE AVANÇAR PARA A PRÓXIMA ETAPA.
+
+NÃO comece automaticamente a próxima parte.
+
+==================================================
+24. ORDEM DE TRABALHO
+==================================================
+
+ETAPA 0 — AUDITORIA, SEM MODIFICAR
+
+Mapeie os dois projetos.
+
+Descubra:
+
+- package atual do Rocha;
+- package Aurora;
+- sourceSets;
+- ABIs;
+- `.so`;
+- DT_NEEDED;
+- JNI;
+- Activities;
+- fluxo do botão Jogar;
+- CEF;
+- WebView;
+- loading;
+- login;
+- armazenamento;
+- servidor;
+- CMake;
+- componentes antigos.
+
+Crie:
+
+/home/android/Rocha-Roleplay/MIGRATION_ARM64.md
+
+Registre o mapa técnico.
+
+PARE e apresente a auditoria.
+
+Não avance sem autorização.
+
+------------------------------
+
+ETAPA 1 — PACKAGE
+
+Migrar SOMENTE a identidade principal para:
+
+com.rocha.game
+
+Faça todas as adaptações necessárias.
+
+Compile.
+
+Confirme que a versão ARM32 ainda abre.
+
+Pesquise referências antigas.
+
+PARE.
+
+------------------------------
+
+ETAPA 2 — GTASA ARM64
+
+Foque SOMENTE na estrutura necessária para:
+
+libGTASA.so ARM64
+
+Adicione dependências ARM64 necessárias.
+
+Adapte carregamento.
+
+Não implemente multiplayer ainda.
+
+Verifique ELF e DT_NEEDED.
+
+Compile.
+
+PARE.
+
+------------------------------
+
+ETAPA 3 — MULTIPLAYER ARM64
+
+Somente depois da ETAPA 2 aprovada:
+
+analise e adapte:
+
+/home/android/gradle/app/src/main/cpp/multiplayer/
+
+para o Rocha.
+
+Compile:
+
+libmultiplayer.so
+
+para:
+
+armeabi-v7a
+arm64-v8a
+
+Mas preserve o fluxo 32-bit original enquanto testa.
+
+Adapte JNI para:
+
+com.rocha.game
+
+Conecte ao GTASA correto.
+
+Compile.
+
+PARE.
+
+------------------------------
+
+ETAPA 4 — FLUXO DE INICIALIZAÇÃO
+
+Conecte:
+
+Launcher Rocha
+→ GTASA
+→ multiplayer
+→ loading
+→ servidor
+→ login.
+
+NÃO altere visual.
+
+Teste primeiro inicialização.
+
+PARE.
+
+------------------------------
+
+ETAPA 5 — CEF / WEBVIEW
+
+Valide todo o suporte:
+
+HTML
+JS
+SCSS/CSS
+WebView
+CEF
+SA-MP Mobile
+
+Certifique-se de que ARM64 utiliza exatamente os mesmos recursos visuais/funcionais.
+
+PARE.
+
+------------------------------
+
+ETAPA 6 — LIMPEZA DO LAUNCHER
+
+Somente agora remova:
+
+- Pawn compiler;
+- host local;
+- servidor local;
+- páginas antigas;
+- créditos antigos;
+- loja antiga;
+- plugins antigos;
+- sistemas que não fazem parte do Rocha final.
+
+Remova também dependências e referências órfãs.
+
+Compile.
+
+PARE.
+
+------------------------------
+
+ETAPA 7 — TESTE COMPLETO ARM32
+
+Teste:
+
+launcher;
+nickname;
+status;
+Jogar;
+loading;
+conexão;
+login;
+CEF;
+WebView;
+UI;
+servidor;
+áudio;
+voice quando aplicável.
+
+Nenhuma regressão é permitida.
+
+PARE.
+
+------------------------------
+
+ETAPA 8 — TESTE COMPLETO ARM64
+
+Faça os mesmos testes em ARM64.
+
+Procure:
+
+UnsatisfiedLinkError
+dlopen failed
+wrong ELF class
+cannot locate symbol
+undefined symbol
+SIGSEGV
+SIGABRT
+
+Corrija a CAUSA.
+
+Não esconda erro.
+
+PARE.
+
+------------------------------
+
+ETAPA 9 — APK UNIVERSAL
+
+Somente depois de ARM32 e ARM64 funcionarem:
+
+gere o APK contendo:
+
+lib/armeabi-v7a/
+lib/arm64-v8a/
+
+Confirme o conteúdo real do APK.
+
+==================================================
+25. COMO VALIDAR O APK
+==================================================
+
+Utilize ferramentas como:
+
+unzip -l
+aapt
+apkanalyzer
+
+Confirme:
+
+lib/armeabi-v7a/
+lib/arm64-v8a/
+
+Para cada `.so` importante:
+
+file
+readelf -h
+readelf -d
+
+Confirme:
+
+ARM32:
+ELF32
+ARM
+
+ARM64:
+ELF64
+AArch64
+
+Nenhum arquivo errado no diretório do outro ABI.
+
+==================================================
+26. NÃO USAR BUILD/ COMO SOURCE
+==================================================
+
+NÃO considere arquivos dentro de:
+
+build/
+.cxx/
+intermediates/
+
+como fonte permanente.
+
+Esses diretórios são outputs.
+
+Exemplo:
+
+libmultiplayer.so encontrado em:
+
+build/intermediates/cxx/...
+
+é artefato de build.
+
+O código real está em:
+
+src/main/cpp/multiplayer/
+
+Integre a SOURCE ao Rocha e deixe o Gradle/CMake gerar o `.so`.
+
+Não copie binário intermediário para fingir integração.
+
+A exceção são libraries proprietárias/prebuilt necessárias, como uma libGTASA.so ARM64, que realmente vivem em jniLibs.
+
+==================================================
+27. SOURCESETS JNI
+==================================================
+
+Observe que:
+
+Projeto referência:
+
+/app/src/main/jniLibs/
+
+Projeto Rocha:
+
+/app/src/main/jniLib/
+
+NÃO renomeie automaticamente.
+
+Primeiro leia o `build.gradle` do Rocha e descubra se `jniLib` está configurado em:
+
+sourceSets
+
+ou de outra forma.
+
+Depois escolha a estrutura correta.
+
+O objetivo é que o Gradle empacote corretamente ambos os ABIs.
+
+==================================================
+28. PRESERVAR DADOS DO SERVIDOR
+==================================================
+
+Não altere:
+
+- protocolo;
+- RPC;
+- autenticação;
+- IDs;
+- estruturas de packets;
+- versão SA-MP;
+- comportamento de rede;
+
+sem necessidade comprovada.
+
+Se o source multiplayer de referência divergir da implementação Rocha:
+
+compare primeiro.
+
+O servidor Linux existente deve continuar enxergando o cliente como esperado.
+
+==================================================
+29. NÃO DECLARAR CONCLUÍDO SÓ PORQUE COMPILOU
+==================================================
+
+"BUILD SUCCESSFUL" NÃO significa migração concluída.
+
+Uma etapa só está funcionando quando o runtime correspondente também foi verificado quando houver ambiente disponível.
+
+Exemplo:
+
+libGTASA ARM64 pode compilar/empacotar e ainda falhar ao carregar.
+
+Portanto valide logs.
+
+Use:
+
+adb logcat
+
+quando houver dispositivo conectado.
+
+Procure:
+
+AndroidRuntime
+linker
+DEBUG
+libc
+GTASA
+multiplayer
+SAMP
+
+==================================================
+30. NUNCA CORRIGIR UM ERRO REMOVENDO A FUNCIONALIDADE
+==================================================
+
+Se CEF falhar em ARM64:
+
+não remova CEF.
+
+Se voice falhar:
+
+não desative voice permanentemente.
+
+Se login falhar:
+
+não pule o login.
+
+Se loading falhar:
+
+não troque pela tela Aurora.
+
+Encontre a causa.
+
+==================================================
+31. BACKUP E CONTROLE
+==================================================
+
+Antes das alterações:
+
+- confira se existe Git;
+- registre status atual;
+- crie branch de migração se possível;
+- não destrua o código original.
+
+Não faça mudanças irreversíveis sem backup.
+
+==================================================
+32. RELATÓRIO DE CADA ETAPA
+==================================================
+
+Atualize:
+
+MIGRATION_ARM64.md
+
+Após cada etapa registre:
+
+- objetivo;
+- arquivos analisados;
+- arquivos modificados;
+- arquivos adicionados;
+- arquivos removidos;
+- motivo;
+- arquitetura afetada;
+- comandos executados;
+- resultado do build;
+- testes;
+- erros encontrados;
+- pendências.
+
+==================================================
+33. REGRA CONTRA SUPOSIÇÕES
+==================================================
+
+Se você NÃO sabe o que uma library faz:
+
+INVESTIGUE.
+
+Não chute.
+
+Se você NÃO sabe qual tela o Rocha usa:
+
+LEIA O CÓDIGO.
+
+Não recrie.
+
+Se você NÃO sabe qual arquivo inicializa o jogo:
+
+TRACE O FLUXO.
+
+Se você NÃO sabe qual `.so` é necessária:
+
+LEIA DT_NEEDED E REFERÊNCIAS.
+
+==================================================
+34. RESULTADO ESPERADO
+==================================================
+
+Ao final teremos:
+
+Rocha Roleplay
+package: com.rocha.game
+
+APK compatível com:
+
+armeabi-v7a
+arm64-v8a
+
+Mantendo:
+
+- visual Rocha;
+- launcher Rocha;
+- nickname;
+- status do servidor;
+- botão Jogar;
+- GTASA correspondente;
+- SA-MP/multiplayer;
+- conexão ao servidor Linux;
+- loading original;
+- login original;
+- XML original;
+- CEF;
+- WebView;
+- HTML;
+- JavaScript;
+- SCSS/CSS;
+- interfaces web;
+- áudio;
+- voice quando utilizado;
+- comportamento original do cliente.
+
+E removendo:
+
+- compilador Pawn;
+- editor Pawn antigo;
+- servidor local;
+- host local;
+- ferramentas antigas;
+- créditos antigos;
+- loja antiga;
+- páginas desnecessárias;
+- plugins exclusivos dessas funções;
+- código órfão.
+
+==================================================
+35. PRIMEIRA AÇÃO AGORA
+==================================================
+
+NÃO MODIFIQUE NADA AINDA.
+
+Comece SOMENTE pela ETAPA 0.
+
+Analise profundamente:
+
+/home/android/Rocha-Roleplay/
+
+e:
+
+/home/android/gradle/
+
+Compare a arquitetura dos dois projetos.
+
+Confirme novamente:
+
+- libGTASA ARM32;
+- libSAMP ARM32;
+- libGTASA ARM64;
+- código multiplayer;
+- CMake;
+- JNI;
+- dependências;
+- fluxo de inicialização;
+- CEF/WebView;
+- package;
+- armazenamento.
+
+Produza o relatório da ETAPA 0.
+
+Depois PARE e peça autorização antes de iniciar a ETAPA 1.
+
+NÃO avance além disso sem autorização.
