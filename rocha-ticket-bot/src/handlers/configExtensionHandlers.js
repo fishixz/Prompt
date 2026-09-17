@@ -14,6 +14,17 @@ const { getGuildConfig, saveGuildConfig, backupString } = require('../database/s
 const { getTicketType, recomputeSetup } = require('../services/configService');
 const { syncStaffRolePermissions } = require('../services/permissionSyncService');
 const { createRollingBackup } = require('../services/backupService');
+const {
+  previewMenu,
+  buildPublicPreview,
+  buildCreatedPreview,
+  buildTicketPreview,
+  buildQuestionnairePreview,
+  buildRatingPreview,
+  buildClosePreview,
+  buildLogsPreview,
+  buildPresetsPreview
+} = require('../services/previewService');
 const views = require('../panels/configPanel');
 const { colorInt, truncate } = require('../utils/discord');
 
@@ -25,6 +36,10 @@ function cleanUpdatePayload(payload) {
   delete clean.ephemeral;
   delete clean.flags;
   return clean;
+}
+
+function privatePayload(payload) {
+  return { ...cleanUpdatePayload(payload), flags: EPHEMERAL };
 }
 
 function advancedStatusPanel(config, validation = null) {
@@ -140,6 +155,10 @@ async function handleConfigExtension(interaction) {
   const id = interaction.customId || '';
   const config = await getGuildConfig(interaction.guildId);
 
+  if (id === 'config:panelpreview') {
+    return interaction.reply(privatePayload(previewMenu(config)));
+  }
+
   if (id === 'config:backup') {
     const { validation } = await recomputeSetup(interaction.guild);
     return interaction.update(advancedStatusPanel(config, validation));
@@ -174,6 +193,48 @@ async function handleConfigExtension(interaction) {
   }
 
   if (!id.startsWith('configx:')) return false;
+
+  if (id === 'configx:preview:public') {
+    return interaction.reply(privatePayload(buildPublicPreview(config, interaction.guild)));
+  }
+
+  if (id === 'configx:preview:created') {
+    return interaction.reply(privatePayload(buildCreatedPreview(config, interaction.guild, interaction.user, interaction.channel)));
+  }
+
+  if (id === 'configx:preview:ticket') {
+    return interaction.reply(privatePayload(buildTicketPreview(config, interaction.guild, interaction.user, interaction.channel)));
+  }
+
+  if (id === 'configx:preview:questionnaire') {
+    return interaction.reply(privatePayload(buildQuestionnairePreview(config, interaction.guild, interaction.user, 0)));
+  }
+
+  if (id.startsWith('configx:preview:qpage:')) {
+    const page = Number(id.split(':').pop()) || 0;
+    return interaction.update(cleanUpdatePayload(buildQuestionnairePreview(config, interaction.guild, interaction.user, page)));
+  }
+
+  if (id === 'configx:preview:rating') {
+    return interaction.reply(privatePayload(buildRatingPreview(config, interaction.guild, interaction.user, interaction.channel)));
+  }
+
+  if (id === 'configx:preview:close') {
+    return interaction.reply(privatePayload(buildClosePreview(config, interaction.guild, interaction.user, interaction.channel)));
+  }
+
+  if (id === 'configx:preview:logs') {
+    return interaction.reply(privatePayload(buildLogsPreview(config, interaction.guild, interaction.user, interaction.channel)));
+  }
+
+  if (id === 'configx:preview:presets') {
+    return interaction.reply(privatePayload(buildPresetsPreview(config, interaction.guild, interaction.user, interaction.channel)));
+  }
+
+  if (id === 'configx:preview:tickettype' && interaction.isStringSelectMenu()) {
+    const typeId = interaction.values[0];
+    return interaction.reply(privatePayload(buildTicketPreview(config, interaction.guild, interaction.user, interaction.channel, typeId)));
+  }
 
   if (id === 'configx:backupdownload') {
     const json = await backupString();
@@ -267,6 +328,7 @@ async function handleConfigExtension(interaction) {
 
 function isConfigExtensionId(id = '') {
   return id === 'config:backup'
+    || id === 'config:panelpreview'
     || id.startsWith('configx:')
     || id.startsWith('config:typeselector:')
     || id === 'config:set:staffroles'
