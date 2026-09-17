@@ -15,6 +15,7 @@ const {
 } = require('./services/ticketService');
 const { syncAllGuildPermissions } = require('./services/permissionSyncService');
 const { createRollingBackup } = require('./services/backupService');
+const { pruneRuntimeState } = require('./services/maintenanceService');
 const { getState } = require('./database/store');
 
 const token = process.env.DISCORD_TOKEN;
@@ -35,6 +36,7 @@ const client = new Client({
 
 async function runMaintenance(readyClient) {
   await dueTicketCleanup(readyClient).catch(error => console.error('Ticket cleanup:', error));
+  await pruneRuntimeState().catch(error => console.error('Runtime state cleanup:', error));
 }
 
 client.once(Events.ClientReady, async readyClient => {
