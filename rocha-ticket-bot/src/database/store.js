@@ -27,7 +27,7 @@ function deepMerge(defaults, saved) {
 
 function initialState() {
   return {
-    version: 2,
+    version: 3,
     guilds: {},
     tickets: {},
     questionnaireResponses: {},
@@ -35,13 +35,14 @@ function initialState() {
     ratings: {},
     cooldowns: {},
     counters: {},
-    moderationWarnings: {}
+    moderationWarnings: {},
+    levels: {}
   };
 }
 
 function normalizeState(db) {
   if (!db || typeof db !== 'object' || Array.isArray(db)) throw new Error('Estrutura do banco JSON inválida.');
-  db.version = Math.max(2, Number(db.version) || 1);
+  db.version = Math.max(3, Number(db.version) || 1);
   db.guilds ||= {};
   db.tickets ||= {};
   db.questionnaireResponses ||= {};
@@ -50,6 +51,7 @@ function normalizeState(db) {
   db.cooldowns ||= {};
   db.counters ||= {};
   db.moderationWarnings ||= {};
+  db.levels ||= {};
   return db;
 }
 
@@ -174,6 +176,13 @@ async function mutate(mutator) {
   return result;
 }
 
+async function replaceState(snapshot) {
+  const next = normalizeState(JSON.parse(JSON.stringify(snapshot)));
+  state = next;
+  await persist();
+  return state;
+}
+
 async function backupString() {
   const db = await ensureLoaded();
   return JSON.stringify(db, null, 2);
@@ -188,6 +197,7 @@ module.exports = {
   getGuildConfig,
   saveGuildConfig,
   mutate,
+  replaceState,
   persist,
   backupString,
   normalizeState,
