@@ -1,3 +1,4 @@
+const { MessageFlags } = require('discord.js');
 const { getGuildConfig, saveGuildConfig } = require('../database/store');
 const { canConfigure } = require('../utils/permissions');
 const { validateConfiguration, recomputeSetup } = require('../services/configService');
@@ -8,31 +9,37 @@ const { handleQuestionnaireComponent, handleQuestionnaireModal } = require('./qu
 const { handleTicketCreateSelect, handleTicketButton, handleTicketSelect, handleTicketModal } = require('./ticketHandlers');
 const { handleRatingButton, handleRatingModal } = require('./ratingHandlers');
 
+function asEphemeral(payload) {
+  const clean = { ...payload };
+  delete clean.ephemeral;
+  return { ...clean, flags: MessageFlags.Ephemeral };
+}
+
 async function deny(interaction) {
-  const payload = { content: '❌ Você não possui permissão para usar essa configuração.', ephemeral: true };
+  const payload = { content: '❌ Você não possui permissão para usar essa configuração.', flags: MessageFlags.Ephemeral };
   if (interaction.replied || interaction.deferred) return interaction.followUp(payload).catch(() => null);
   return interaction.reply(payload).catch(() => null);
 }
 
 async function openConfig(interaction) {
-  if (!interaction.inGuild()) return interaction.reply({ content: 'Use este comando dentro de um servidor.', ephemeral: true });
+  if (!interaction.inGuild()) return interaction.reply({ content: 'Use este comando dentro de um servidor.', flags: MessageFlags.Ephemeral });
   if (!await canConfigure(interaction)) return deny(interaction);
   const { config, validation } = await recomputeSetup(interaction.guild);
-  return interaction.reply(configHome(config, validation));
+  return interaction.reply(asEphemeral(configHome(config, validation)));
 }
 
 async function publishPanel(interaction) {
-  if (!interaction.inGuild()) return interaction.reply({ content: 'Use este comando dentro de um servidor.', ephemeral: true });
+  if (!interaction.inGuild()) return interaction.reply({ content: 'Use este comando dentro de um servidor.', flags: MessageFlags.Ephemeral });
   if (!await canConfigure(interaction)) return deny(interaction);
 
   const { config, validation } = await recomputeSetup(interaction.guild);
   if (!validation.ok) {
     const view = configHome(config, validation);
     view.content = '⚠️ O `/painel` só será liberado quando os itens obrigatórios estiverem válidos.';
-    return interaction.reply(view);
+    return interaction.reply(asEphemeral(view));
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const channel = interaction.guild.channels.cache.get(config.panel.channelId) || await interaction.guild.channels.fetch(config.panel.channelId).catch(() => null);
   if (!channel?.isTextBased()) return interaction.editReply('❌ O canal do painel não existe mais. Abra `/config`.');
 
@@ -88,8 +95,8 @@ async function interactionCreate(interaction) {
     console.error('Interaction error:', error);
     const content = `❌ Ocorreu um erro ao processar esta ação.\n\`${String(error.message || error).slice(0, 1500)}\``;
     if (interaction.deferred) return interaction.editReply({ content }).catch(() => null);
-    if (interaction.replied) return interaction.followUp({ content, ephemeral: true }).catch(() => null);
-    return interaction.reply({ content, ephemeral: true }).catch(() => null);
+    if (interaction.replied) return interaction.followUp({ content, flags: MessageFlags.Ephemeral }).catch(() => null);
+    return interaction.reply({ content, flags: MessageFlags.Ephemeral }).catch(() => null);
   }
 }
 
