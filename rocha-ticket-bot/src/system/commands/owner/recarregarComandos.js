@@ -1,10 +1,8 @@
-const { registerGuildCommands } = require('../../../commands/registerCommands');
-const { registerExtraGuildCommands } = require('../../../commands/extraCommands');
+const { registerGuildSystemCommands } = require('../../../commands/allCommands');
 const { sendSystemAudit } = require('../../../services/systemAuditService');
 
 async function execute(interaction) {
-  await registerGuildCommands(interaction.guild);
-  await registerExtraGuildCommands(interaction.guild);
+  await registerGuildSystemCommands(interaction.guild);
   await sendSystemAudit(interaction.guild, {
     action: 'Comandos recarregados',
     actor: interaction.user,
