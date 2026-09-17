@@ -1,5 +1,4 @@
-const { OverwriteType } = require('discord.js');
-const { getGuildConfig, getState } = require('../database/store');
+const { getGuildConfig, getState, mutate } = require('../database/store');
 const { getTicketType } = require('./configService');
 
 const TEXT_STAFF_ALLOW = {
@@ -24,27 +23,7 @@ async function fetchChannel(guild, id) {
   return guild.channels.cache.get(id) || await guild.channels.fetch(id).catch(() => null);
 }
 
-async function syncChannelRoleOverwrites(channel, guild, desiredRoles, allowPermissions) {
-  if (!channel?.permissionOverwrites) return;
-
-  // Tickets são canais gerenciados integralmente pelo bot. Portanto, qualquer overwrite
-  // de cargo que não seja @everyone e não pertença mais à equipe é considerado obsoleto.
-  for (const overwrite of channel.permissionOverwrites.cache.values()) {
-    const isRole = overwrite.type === OverwriteType.Role || overwrite.type === 0;
-    if (!isRole || overwrite.id === guild.roles.everyone.id) continue;
-    if (!desiredRoles.has(overwrite.id)) {
-      await channel.permissionOverwrites.delete(overwrite.id, 'Remoção de cargo antigo da equipe do Rocha Ticket').catch(() => null);
-    }
-  }
-
-  for (const roleId of desiredRoles) {
-    await channel.permissionOverwrites.edit(roleId, allowPermissions, {
-      reason: 'Sincronização de cargos do Rocha Ticket'
-    }).catch(() => null);
-  }
-}
-
-async function syncStaffRolePermissions(guild, { typeId = null } = {}) {
+async function syncStaffRolePermissions(guild, { typeId = null, roleIdsToRemove = [] } = {}) {
   const config = await getGuildConfig(guild.id);
   const db = await getState();
   const tickets = Object.values(db.tickets).filter(ticket =>
@@ -62,16 +41,57 @@ async function syncStaffRolePermissions(guild, { typeId = null } = {}) {
       ...(type?.staffRoleIds || [])
     ]);
 
+    const previous = new Set([
+      ...(ticket.syncedStaffRoleIds || []),
+      ...roleIdsToRemove
+    ]);
+
     const textChannel = await fetchChannel(guild, ticket.channelId);
-    if (textChannel) await syncChannelRoleOverwrites(textChannel, guild, desired, TEXT_STAFF_ALLOW);
+    if (textChannel) {
+      for (const roleId of previous) {
+        if (!desired.has(roleId)) {
+          await textChannel.permissionOverwrites.delete(roleId, 'Sincronização de cargos do Rocha Ticket').catch(() => null);
+        }
+      }
+      for (const roleId of desired) {
+        await textChannel.permissionOverwrites.edit(roleId, TEXT_STAFF_ALLOW, { reason: 'Sincronização de cargos do Rocha Ticket' }).catch(() => null);
+      }
+    }
 
     const call = await fetchChannel(guild, ticket.callChannelId);
-    if (call) await syncChannelRoleOverwrites(call, guild, desired, VOICE_STAFF_ALLOW);
+    if (call) {
+      for (const roleId of previous) {
+        if (!desired.has(roleId)) {
+          await call.permissionOverwrites.delete(roleId, 'Sincronização de cargos do Rocha Ticket').catch(() => null);
+        }
+      }
+      for (const roleId of desired) {
+        await call.permissionOverwrites.edit(roleId, VOICE_STAFF_ALLOW, { reason: 'Sincronização de cargos do Rocha Ticket' }).catch(() => null);
+      }
+    }
 
+    await mutate(state => {
+      const stored = state.tickets[ticket.uid];
+      if (stored) stored.syncedStaffRoleIds = [...desired];
+    });
     synced++;
   }
 
   return synced;
 }
 
-module.exports = { syncStaffRolePermissions };
+async function syncAllGuildPermissions(client) {
+  let guilds = 0;
+  let tickets = 0;
+  for (const guild of client.guilds.cache.values()) {
+    try {
+      tickets += await syncStaffRolePermissions(guild);
+      guilds++;
+    } catch (error) {
+      console.error(`Falha ao sincronizar permissões em ${guild.id}:`, error);
+    }
+  }
+  return { guilds, tickets };
+}
+
+module.exports = { syncStaffRolePermissions, syncAllGuildPermissions };
