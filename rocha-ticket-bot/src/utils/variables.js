@@ -16,6 +16,7 @@ const VARIABLE_DOCS = {
   '{channel_id}': 'ID do canal',
   '{channel_mention}': 'Menção do canal',
   '{staff_name}': 'Nome do atendente',
+  '{staff_display}': 'Nome de exibição do atendente',
   '{staff_id}': 'ID do atendente',
   '{staff_mention}': 'Menção do atendente',
   '{reason}': 'Motivo/resultado do fechamento',
@@ -30,13 +31,16 @@ const VARIABLE_DOCS = {
 function buildVariables({ guild, member, user, ticket, ticketType, channel, staff, reason, rating, ratingComment, config }) {
   const actor = user || member?.user;
   const staffUser = staff?.user || staff;
+  const actorId = actor?.id || ticket?.userId || '';
+  const staffId = staffUser?.id || ticket?.claimedBy || '';
+
   return {
     guilda: guild?.name || '',
-    guild_id: guild?.id || '',
-    user_name: actor?.username || '',
-    user_display: member?.displayName || actor?.globalName || actor?.username || '',
-    user_id: actor?.id || ticket?.userId || '',
-    user_mention: actor?.id ? `<@${actor.id}>` : (ticket?.userId ? `<@${ticket.userId}>` : ''),
+    guild_id: guild?.id || ticket?.guildId || '',
+    user_name: actor?.username || ticket?.userName || '',
+    user_display: member?.displayName || actor?.globalName || actor?.username || ticket?.userDisplay || ticket?.userName || '',
+    user_id: actorId,
+    user_mention: actorId ? `<@${actorId}>` : '',
     ticket_id: ticket?.number != null ? String(ticket.number).padStart(4, '0') : '',
     ticket_uid: ticket?.uid || '',
     ticket_type: ticketType?.name || ticket?.typeName || '',
@@ -44,10 +48,11 @@ function buildVariables({ guild, member, user, ticket, ticketType, channel, staf
     ticket_type_slug: slugify(ticketType?.name || ticket?.typeName || ''),
     ticket_name: channel?.name || ticket?.channelName || '',
     channel_id: channel?.id || ticket?.channelId || '',
-    channel_mention: channel?.id ? `<#${channel.id}>` : (ticket?.channelId ? `<#${ticket.channelId}>` : ''),
-    staff_name: staffUser?.username || '',
-    staff_id: staffUser?.id || ticket?.claimedBy || '',
-    staff_mention: staffUser?.id ? `<@${staffUser.id}>` : (ticket?.claimedBy ? `<@${ticket.claimedBy}>` : ''),
+    channel_mention: (channel?.id || ticket?.channelId) ? `<#${channel?.id || ticket.channelId}>` : '',
+    staff_name: staffUser?.username || ticket?.claimedByName || '',
+    staff_display: staff?.displayName || staffUser?.globalName || staffUser?.username || ticket?.claimedByDisplay || ticket?.claimedByName || '',
+    staff_id: staffId,
+    staff_mention: staffId ? `<@${staffId}>` : '',
     reason: reason || ticket?.closeReason || '',
     rating: rating != null ? String(rating) : '',
     rating_comment: ratingComment || '',
