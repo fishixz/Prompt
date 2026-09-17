@@ -5,6 +5,7 @@ const { recomputeSetup } = require('../services/configService');
 const { runDiagnostics } = require('../services/diagnosticService');
 const { consumeCooldown } = require('../services/securityService');
 const { handleCallMemberSelect } = require('../services/callMemberService');
+const { handleClaimButton } = require('../services/claimService');
 const { handleTicketPresetInteraction, isTicketPresetId } = require('../services/ticketPresetService');
 const { configHome } = require('../panels/configPanel');
 const { panelMessage } = require('../panels/ticketPanel');
@@ -156,6 +157,10 @@ async function interactionCreate(interaction) {
         });
       }
       return handleTicketCreateSelect(interaction);
+    }
+
+    if (interaction.customId?.startsWith('ticket:claim:') && interaction.isButton()) {
+      return handleClaimButton(interaction);
     }
 
     if (isTicketPresetId(interaction.customId || '')) {
