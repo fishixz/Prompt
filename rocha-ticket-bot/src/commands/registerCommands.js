@@ -1,5 +1,7 @@
 const { SlashCommandBuilder, ChannelType } = require('discord.js');
 
+const textChannelTypes = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
+
 const commandData = [
   new SlashCommandBuilder()
     .setName('config')
@@ -53,6 +55,18 @@ const commandData = [
       .addStringOption(option => option.setName('atividade').setDescription('Texto exibido como atividade do bot.').setRequired(false).setMaxLength(128))),
 
   new SlashCommandBuilder()
+    .setName('dono')
+    .setDescription('Controles exclusivos do cargo Dono do RochaSystem.')
+    .addSubcommand(sub => sub.setName('servidores').setDescription('Lista os servidores onde o RochaSystem está presente.'))
+    .addSubcommand(sub => sub.setName('recarregar-comandos').setDescription('Registra novamente os slash commands neste servidor.'))
+    .addSubcommand(sub => sub.setName('emojis').setDescription('Lista os emojis personalizados do servidor.'))
+    .addSubcommand(sub => sub.setName('runtime').setDescription('Mostra informações do processo, memória e latência.'))
+    .addSubcommand(sub => sub
+      .setName('anunciar').setDescription('Envia uma mensagem oficial em um canal.')
+      .addChannelOption(option => option.setName('canal').setDescription('Canal onde o anúncio será enviado.').setRequired(true).addChannelTypes(...textChannelTypes))
+      .addStringOption(option => option.setName('mensagem').setDescription('Conteúdo do anúncio.').setRequired(true).setMinLength(1).setMaxLength(2000))),
+
+  new SlashCommandBuilder()
     .setName('admin')
     .setDescription('Comandos de administração do RochaSystem.')
     .addSubcommand(sub => sub
@@ -71,17 +85,17 @@ const commandData = [
       .addUserOption(option => option.setName('usuario').setDescription('Opcional: apagar somente mensagens deste usuário.')))
     .addSubcommand(sub => sub
       .setName('canal-trancar').setDescription('Impede @everyone de enviar mensagens em um canal.')
-      .addChannelOption(option => option.setName('canal').setDescription('Canal; vazio usa o canal atual.').addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)))
+      .addChannelOption(option => option.setName('canal').setDescription('Canal; vazio usa o canal atual.').addChannelTypes(...textChannelTypes)))
     .addSubcommand(sub => sub
       .setName('canal-destrancar').setDescription('Restaura as permissões normais de envio do canal.')
-      .addChannelOption(option => option.setName('canal').setDescription('Canal; vazio usa o canal atual.').addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)))
+      .addChannelOption(option => option.setName('canal').setDescription('Canal; vazio usa o canal atual.').addChannelTypes(...textChannelTypes)))
     .addSubcommand(sub => sub.setName('cargos').setDescription('Lista os cargos e IDs do servidor.'))
     .addSubcommand(sub => sub
       .setName('embed').setDescription('Envia uma embed personalizada.')
       .addStringOption(option => option.setName('descricao').setDescription('Texto principal da embed.').setRequired(true).setMaxLength(4000))
       .addStringOption(option => option.setName('titulo').setDescription('Título opcional.').setMaxLength(256))
       .addStringOption(option => option.setName('cor').setDescription('Cor hexadecimal, ex.: #F5A300.').setMaxLength(7))
-      .addChannelOption(option => option.setName('canal').setDescription('Canal de destino; vazio usa o atual.').addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)))
+      .addChannelOption(option => option.setName('canal').setDescription('Canal de destino; vazio usa o atual.').addChannelTypes(...textChannelTypes)))
     .addSubcommand(sub => sub
       .setName('emoji-buscar').setDescription('Busca emojis do servidor pelo nome.')
       .addStringOption(option => option.setName('nome').setDescription('Nome ou parte do nome do emoji.').setRequired(true).setMaxLength(100))),
@@ -122,7 +136,36 @@ const commandData = [
       .setName('remover-advertencia').setDescription('Remove uma advertência específica pelo ID.')
       .addUserOption(option => option.setName('usuario').setDescription('Membro da advertência.').setRequired(true))
       .addStringOption(option => option.setName('id').setDescription('ID exibido em /moderacao advertencias.').setRequired(true).setMaxLength(32))
-      .addStringOption(option => option.setName('motivo').setDescription('Motivo da remoção.').setMaxLength(1000)))
+      .addStringOption(option => option.setName('motivo').setDescription('Motivo da remoção.').setMaxLength(1000))),
+
+  new SlashCommandBuilder()
+    .setName('configuracao')
+    .setDescription('Configurações rápidas e administrativas do RochaSystem.')
+    .addSubcommand(sub => sub.setName('ver').setDescription('Mostra um resumo da configuração atual.'))
+    .addSubcommand(sub => sub
+      .setName('auditoria').setDescription('Define ou remove o canal de auditoria do sistema.')
+      .addChannelOption(option => option.setName('canal').setDescription('Canal de auditoria. Deixe vazio para remover o canal específico.').addChannelTypes(...textChannelTypes)))
+    .addSubcommand(sub => sub
+      .setName('cor').setDescription('Altera a cor principal usada pelo RochaSystem.')
+      .addStringOption(option => option.setName('hex').setDescription('Cor hexadecimal, por exemplo #F5A300.').setRequired(true).setMinLength(6).setMaxLength(7)))
+    .addSubcommand(sub => sub
+      .setName('rodape').setDescription('Altera o rodapé padrão das embeds do sistema.')
+      .addStringOption(option => option.setName('texto').setDescription('Novo texto do rodapé.').setRequired(true).setMinLength(1).setMaxLength(200))),
+
+  new SlashCommandBuilder()
+    .setName('utilidade')
+    .setDescription('Ferramentas e consultas gerais do RochaSystem.')
+    .addSubcommand(sub => sub.setName('ping').setDescription('Mostra a latência do bot e da interação.'))
+    .addSubcommand(sub => sub
+      .setName('avatar').setDescription('Mostra o avatar de um usuário.')
+      .addUserOption(option => option.setName('usuario').setDescription('Usuário; vazio mostra seu próprio avatar.')))
+    .addSubcommand(sub => sub
+      .setName('usuario').setDescription('Mostra informações de um usuário e membro.')
+      .addUserOption(option => option.setName('usuario').setDescription('Usuário; vazio mostra suas informações.')))
+    .addSubcommand(sub => sub.setName('servidor').setDescription('Mostra informações do servidor atual.'))
+    .addSubcommand(sub => sub
+      .setName('convite').setDescription('Cria um convite temporário de 1 hora.')
+      .addChannelOption(option => option.setName('canal').setDescription('Canal do convite; vazio usa o canal atual.').addChannelTypes(...textChannelTypes)))
 ].map(command => command.toJSON());
 
 async function registerGuildCommands(guild) {
