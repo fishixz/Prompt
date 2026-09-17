@@ -1,0 +1,14 @@
+{
+  "name": "rocha-discord-role-organizer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Organizador seguro de cargos do Discord do Rocha Roleplay",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "check": "node --check index.js"
+  },
+  "dependencies": {
+    "discord.js": "14.27.0"
+  }
+}
