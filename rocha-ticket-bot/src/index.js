@@ -16,7 +16,8 @@ const {
 const { syncAllGuildPermissions } = require('./services/permissionSyncService');
 const { createRollingBackup } = require('./services/backupService');
 const { pruneRuntimeState } = require('./services/maintenanceService');
-const { getState } = require('./database/store');
+const { applySystemIdentity } = require('./services/botIdentityService');
+const { getState, getGuildConfig } = require('./database/store');
 
 const token = process.env.DISCORD_TOKEN;
 if (!token) {
@@ -40,11 +41,20 @@ async function runMaintenance(readyClient) {
 }
 
 client.once(Events.ClientReady, async readyClient => {
-  console.log(`\n✅ Rocha Ticket conectado como ${readyClient.user.tag}`);
+  console.log(`\n✅ RochaSystem conectado como ${readyClient.user.tag}`);
   console.log(`🏠 Servidores: ${readyClient.guilds.cache.size}`);
-  readyClient.user.setActivity('Tickets • Rocha Roleplay', { type: ActivityType.Watching });
 
   await getState();
+
+  const primaryGuild = readyClient.guilds.cache.first();
+  if (primaryGuild) {
+    const config = await getGuildConfig(primaryGuild.id);
+    const identity = await applySystemIdentity(readyClient, config);
+    if (identity.errors.length) console.warn(`⚠️ Identidade do RochaSystem: ${identity.errors.join(' | ')}`);
+    else console.log('🦊 Identidade RochaSystem aplicada.');
+  } else {
+    readyClient.user.setActivity('RochaSystem • Rocha Roleplay', { type: ActivityType.Watching });
+  }
 
   const reconciliation = await reconcileTickets(readyClient).catch(error => {
     console.error('❌ Falha na reconciliação inicial:', error);
