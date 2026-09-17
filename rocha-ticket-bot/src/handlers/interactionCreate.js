@@ -1,7 +1,9 @@
-const { MessageFlags } = require('discord.js');
+const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { getGuildConfig, saveGuildConfig } = require('../database/store');
 const { canConfigure } = require('../utils/permissions');
-const { validateConfiguration, recomputeSetup } = require('../services/configService');
+const { recomputeSetup } = require('../services/configService');
+const { runDiagnostics } = require('../services/diagnosticService');
+const { consumeCooldown } = require('../services/securityService');
 const { configHome } = require('../panels/configPanel');
 const { panelMessage } = require('../panels/ticketPanel');
 const { handleConfigComponent, handleConfigModal } = require('./configHandlers');
@@ -12,6 +14,7 @@ const { handleRatingButton, handleRatingModal } = require('./ratingHandlers');
 function asEphemeral(payload) {
   const clean = { ...payload };
   delete clean.ephemeral;
+  delete clean.flags;
   return { ...clean, flags: MessageFlags.Ephemeral };
 }
 
@@ -40,7 +43,8 @@ async function publishPanel(interaction) {
   }
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  const channel = interaction.guild.channels.cache.get(config.panel.channelId) || await interaction.guild.channels.fetch(config.panel.channelId).catch(() => null);
+  const channel = interaction.guild.channels.cache.get(config.panel.channelId)
+    || await interaction.guild.channels.fetch(config.panel.channelId).catch(() => null);
   if (!channel?.isTextBased()) return interaction.editReply('❌ O canal do painel não existe mais. Abra `/config`.');
 
   const payload = panelMessage(config, interaction.guild);
@@ -57,11 +61,48 @@ async function publishPanel(interaction) {
   return interaction.editReply(`✅ Painel publicado/atualizado em ${channel}: https://discord.com/channels/${interaction.guildId}/${channel.id}/${message.id}`);
 }
 
+function diagnosticField(items, emptyText, limit = 10) {
+  if (!items.length) return emptyText;
+  const visible = items.slice(0, limit).map(item => `• ${item}`).join('\n');
+  return items.length > limit ? `${visible}\n• ... e mais ${items.length - limit}`.slice(0, 1024) : visible.slice(0, 1024);
+}
+
+async function openDiagnostics(interaction) {
+  if (!interaction.inGuild()) return interaction.reply({ content: 'Use este comando dentro de um servidor.', flags: MessageFlags.Ephemeral });
+  if (!await canConfigure(interaction)) return deny(interaction);
+
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  const report = await runDiagnostics(interaction.guild, interaction.client);
+  const healthy = report.errors.length === 0;
+  const embed = new EmbedBuilder()
+    .setColor(healthy ? 0x20bf6b : 0xe74c3c)
+    .setTitle(healthy ? '✅ Diagnóstico • Rocha Ticket' : '⚠️ Diagnóstico • Rocha Ticket')
+    .setDescription([
+      `**Erros:** ${report.errors.length}`,
+      `**Avisos:** ${report.warnings.length}`,
+      `**Verificações OK:** ${report.ok.length}`,
+      '',
+      `**Tickets:** ${report.stats.totalTickets} no histórico • ${report.stats.activeTickets} ativos`,
+      `**Questionários respondidos:** ${report.stats.questionnaireResponses}`,
+      `**Avaliações registradas:** ${report.stats.ratings}`
+    ].join('\n'))
+    .addFields(
+      { name: '❌ Erros', value: diagnosticField(report.errors, 'Nenhum erro detectado.'), inline: false },
+      { name: '⚠️ Avisos', value: diagnosticField(report.warnings, 'Nenhum aviso.'), inline: false },
+      { name: '✅ Verificações', value: diagnosticField(report.ok, 'Nenhuma verificação positiva registrada.'), inline: false }
+    )
+    .setFooter({ text: 'Execute novamente após alterar a configuração.' })
+    .setTimestamp();
+
+  return interaction.editReply({ embeds: [embed] });
+}
+
 async function interactionCreate(interaction) {
   try {
     if (interaction.isChatInputCommand()) {
       if (interaction.commandName === 'config') return openConfig(interaction);
       if (interaction.commandName === 'painel') return publishPanel(interaction);
+      if (interaction.commandName === 'diagnostico') return openDiagnostics(interaction);
       return;
     }
 
@@ -83,6 +124,20 @@ async function interactionCreate(interaction) {
     }
 
     if (interaction.customId?.startsWith('ticket:create:') && interaction.isStringSelectMenu()) {
+      const config = await getGuildConfig(interaction.guildId);
+      const cooldown = await consumeCooldown(
+        interaction.guildId,
+        interaction.user.id,
+        'ticket-create',
+        config.security.cooldownSeconds
+      );
+      if (!cooldown.allowed) {
+        const seconds = Math.max(1, Math.ceil(cooldown.retryAfterMs / 1000));
+        return interaction.reply({
+          content: `⏳ Aguarde **${seconds}s** antes de tentar abrir outro atendimento.`,
+          flags: MessageFlags.Ephemeral
+        });
+      }
       return handleTicketCreateSelect(interaction);
     }
 
@@ -100,4 +155,9 @@ async function interactionCreate(interaction) {
   }
 }
 
-module.exports = { interactionCreate, openConfig, publishPanel };
+module.exports = {
+  interactionCreate,
+  openConfig,
+  publishPanel,
+  openDiagnostics
+};
