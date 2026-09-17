@@ -34,8 +34,18 @@ function defaultSystemConfig() {
       cidadao: defaultTier(['utilidades', 'pesquisa', 'diversao', 'jogos', 'niveis']),
       visitante: defaultTier(['utilidades'])
     },
-    audit: {
-      channelId: null
+    audit: { channelId: null },
+    automod: {
+      enabled: false,
+      deleteMessage: true,
+      notifyUser: true,
+      words: []
+    },
+    levels: {
+      enabled: true,
+      xpMin: 5,
+      xpMax: 15,
+      cooldownSeconds: 60
     }
   };
 }
@@ -50,6 +60,9 @@ function ensureSystemConfig(config) {
 
   config.system.identity = { ...defaults.identity, ...(config.system.identity || {}) };
   config.system.audit = { ...defaults.audit, ...(config.system.audit || {}) };
+  config.system.automod = { ...defaults.automod, ...(config.system.automod || {}) };
+  config.system.automod.words = Array.isArray(config.system.automod.words) ? config.system.automod.words : [];
+  config.system.levels = { ...defaults.levels, ...(config.system.levels || {}) };
   config.system.access ||= {};
 
   for (const tier of TIER_ORDER) {
@@ -119,10 +132,7 @@ async function canUseSystemCommand(interaction, commandId) {
 
   const tiers = configuredTiers(config, interaction.member);
   if (!tiers.length) {
-    return {
-      allowed: false,
-      reason: 'Você não possui nenhum cargo do RochaSystem configurado para usar comandos.'
-    };
+    return { allowed: false, reason: 'Você não possui nenhum cargo do RochaSystem configurado para usar comandos.' };
   }
 
   const explicit = tiers.find(tier => commandAllowedForTier(system, tier, commandId));
@@ -142,8 +152,6 @@ async function canConfigureRochaSystem(interaction) {
   const config = await getGuildConfig(interaction.guildId);
   if (isOwnerFromConfig(config, interaction.guild, interaction.member, interaction.user.id)) return true;
 
-  // Migração: enquanto nenhum cargo Dono do novo RochaSystem foi definido,
-  // mantém os administradores antigos capazes de abrir /config para concluir a migração.
   if (!hasConfiguredOwner(config)) {
     if (config.permissions?.adminUserIds?.includes(interaction.user.id)) return true;
     if (memberHasRole(interaction.member, config.permissions?.adminRoleIds || [])) return true;
