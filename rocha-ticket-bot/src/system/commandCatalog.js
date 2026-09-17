@@ -48,6 +48,13 @@ const COMMAND_CATALOG = [
   { id: 'moderacao.limpar-advertencias', slash: 'moderacao limpar-advertencias', label: 'Limpar advertências', category: 'moderacao' },
   { id: 'moderacao.remover-advertencia', slash: 'moderacao remover-advertencia', label: 'Remover uma advertência', category: 'moderacao' },
 
+  { id: 'automod.ver', slash: 'automod ver', label: 'Ver AutoMod', category: 'automod' },
+  { id: 'automod.ativar', slash: 'automod ativar', label: 'Ativar AutoMod', category: 'automod' },
+  { id: 'automod.desativar', slash: 'automod desativar', label: 'Desativar AutoMod', category: 'automod' },
+  { id: 'automod.adicionar-palavra', slash: 'automod adicionar-palavra', label: 'Bloquear palavra', category: 'automod' },
+  { id: 'automod.remover-palavra', slash: 'automod remover-palavra', label: 'Liberar palavra', category: 'automod' },
+  { id: 'automod.limpar-palavras', slash: 'automod limpar-palavras', label: 'Limpar filtro', category: 'automod' },
+
   { id: 'configuracao.ver', slash: 'configuracao ver', label: 'Ver configuração do sistema', category: 'configuracao' },
   { id: 'configuracao.auditoria', slash: 'configuracao auditoria', label: 'Configurar canal de auditoria', category: 'configuracao' },
   { id: 'configuracao.cor', slash: 'configuracao cor', label: 'Alterar cor principal', category: 'configuracao' },
@@ -58,6 +65,31 @@ const COMMAND_CATALOG = [
   { id: 'utilidade.usuario', slash: 'utilidade usuario', label: 'Informações de usuário', category: 'utilidades' },
   { id: 'utilidade.servidor', slash: 'utilidade servidor', label: 'Informações do servidor', category: 'utilidades' },
   { id: 'utilidade.convite', slash: 'utilidade convite', label: 'Criar convite temporário', category: 'utilidades' },
+
+  { id: 'pesquisa.github', slash: 'pesquisa github', label: 'Pesquisar GitHub', category: 'pesquisa' },
+  { id: 'pesquisa.cargo', slash: 'pesquisa cargo', label: 'Pesquisar cargo', category: 'pesquisa' },
+  { id: 'pesquisa.canal', slash: 'pesquisa canal', label: 'Pesquisar canal', category: 'pesquisa' },
+
+  { id: 'diversao.oito-bola', slash: 'diversao oito-bola', label: 'Oito-bola', category: 'diversao' },
+  { id: 'diversao.moeda', slash: 'diversao moeda', label: 'Cara ou coroa', category: 'diversao' },
+  { id: 'diversao.dado', slash: 'diversao dado', label: 'Rolar dado', category: 'diversao' },
+  { id: 'diversao.escolher', slash: 'diversao escolher', label: 'Escolher opção', category: 'diversao' },
+  { id: 'diversao.emojificar', slash: 'diversao emojificar', label: 'Emojificar texto', category: 'diversao' },
+
+  { id: 'jogo.ppt', slash: 'jogo ppt', label: 'Pedra, papel e tesoura', category: 'jogos' },
+  { id: 'jogo.numero', slash: 'jogo numero', label: 'Adivinhar número', category: 'jogos' },
+  { id: 'jogo.par-ou-impar', slash: 'jogo par-ou-impar', label: 'Par ou ímpar', category: 'jogos' },
+
+  { id: 'nivel.perfil', slash: 'nivel perfil', label: 'Perfil de nível', category: 'niveis' },
+  { id: 'nivel.ranking', slash: 'nivel ranking', label: 'Ranking de níveis', category: 'niveis' },
+  { id: 'nivel.ativar', slash: 'nivel ativar', label: 'Ativar níveis', category: 'configuracao' },
+  { id: 'nivel.desativar', slash: 'nivel desativar', label: 'Desativar níveis', category: 'configuracao' },
+  { id: 'nivel.configurar', slash: 'nivel configurar', label: 'Configurar níveis', category: 'configuracao' },
+
+  { id: 'backup.criar', slash: 'backup criar', label: 'Criar backup', category: 'backup' },
+  { id: 'backup.listar', slash: 'backup listar', label: 'Listar backups', category: 'backup' },
+  { id: 'backup.exportar', slash: 'backup exportar', label: 'Exportar backup', category: 'backup' },
+  { id: 'backup.restaurar', slash: 'backup restaurar', label: 'Restaurar backup', category: 'backup', ownerOnly: true },
 
   { id: 'config', slash: 'config', label: 'Configurar RochaSystem', category: 'configuracao', ownerOnly: true },
   { id: 'painel', slash: 'painel', label: 'Publicar painel de tickets', category: 'tickets', ownerOnly: true },
