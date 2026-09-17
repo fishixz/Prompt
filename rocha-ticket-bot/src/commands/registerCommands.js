@@ -6,8 +6,11 @@ const commandData = [
     .setDescription('Abre o painel privado de configuração do sistema de tickets.'),
   new SlashCommandBuilder()
     .setName('painel')
-    .setDescription('Publica/atualiza o painel de abertura de tickets.')
-].map(c => c.toJSON());
+    .setDescription('Publica/atualiza o painel de abertura de tickets.'),
+  new SlashCommandBuilder()
+    .setName('diagnostico')
+    .setDescription('Executa uma verificação privada de saúde do sistema de tickets.')
+].map(command => command.toJSON());
 
 async function registerGuildCommands(guild) {
   try {
