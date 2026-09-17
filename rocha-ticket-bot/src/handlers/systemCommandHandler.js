@@ -17,6 +17,9 @@ const {
 const { COMMAND_CATEGORIES } = require('../system/commandCatalog');
 const { executeAdmin, commandIdForSubcommand: adminCommandId } = require('../system/commands/admin');
 const { executeModeration, commandIdForSubcommand: moderationCommandId } = require('../system/commands/moderation');
+const { executeOwner, commandIdForSubcommand: ownerCommandId } = require('../system/commands/owner');
+const { executeSettings, commandIdForSubcommand: settingsCommandId } = require('../system/commands/settings');
+const { executeUtility, commandIdForSubcommand: utilityCommandId } = require('../system/commands/utility');
 const { colorInt, truncate } = require('../utils/discord');
 
 const EPHEMERAL = MessageFlags.Ephemeral;
@@ -133,6 +136,24 @@ async function handleModerationCommand(interaction) {
   return handleProtectedGroup(interaction, commandId, () => executeModeration(interaction, sub));
 }
 
+async function handleOwnerCommand(interaction) {
+  const sub = interaction.options.getSubcommand();
+  const commandId = ownerCommandId(sub);
+  return handleProtectedGroup(interaction, commandId, () => executeOwner(interaction, sub));
+}
+
+async function handleSettingsCommand(interaction) {
+  const sub = interaction.options.getSubcommand();
+  const commandId = settingsCommandId(sub);
+  return handleProtectedGroup(interaction, commandId, () => executeSettings(interaction, sub));
+}
+
+async function handleUtilityCommand(interaction) {
+  const sub = interaction.options.getSubcommand();
+  const commandId = utilityCommandId(sub);
+  return handleProtectedGroup(interaction, commandId, () => executeUtility(interaction, sub));
+}
+
 async function handleHelpCommand(interaction) {
   const access = await deny(interaction, 'ajuda');
   if (!access) return true;
@@ -169,23 +190,21 @@ async function handleHelpCommand(interaction) {
 
 async function handleSystemSlashCommand(interaction) {
   if (!interaction.isChatInputCommand()) return false;
-  if (interaction.commandName === 'bot') {
-    await handleBotCommand(interaction);
-    return true;
-  }
-  if (interaction.commandName === 'admin') {
-    await handleAdminCommand(interaction);
-    return true;
-  }
-  if (interaction.commandName === 'moderacao') {
-    await handleModerationCommand(interaction);
-    return true;
-  }
-  if (interaction.commandName === 'ajuda') {
-    await handleHelpCommand(interaction);
-    return true;
-  }
-  return false;
+
+  const handlers = {
+    bot: handleBotCommand,
+    admin: handleAdminCommand,
+    moderacao: handleModerationCommand,
+    dono: handleOwnerCommand,
+    configuracao: handleSettingsCommand,
+    utilidade: handleUtilityCommand,
+    ajuda: handleHelpCommand
+  };
+
+  const handler = handlers[interaction.commandName];
+  if (!handler) return false;
+  await handler(interaction);
+  return true;
 }
 
 module.exports = {
@@ -193,5 +212,8 @@ module.exports = {
   handleBotCommand,
   handleAdminCommand,
   handleModerationCommand,
+  handleOwnerCommand,
+  handleSettingsCommand,
+  handleUtilityCommand,
   handleHelpCommand
 };
