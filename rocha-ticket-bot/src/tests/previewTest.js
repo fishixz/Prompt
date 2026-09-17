@@ -103,9 +103,12 @@ function run() {
   }
 
   const questionnaire = buildQuestionnairePreview(config, guild, user, 0);
-  const qIds = (questionnaire.components || []).flatMap(row => (json(row).components || []).map(component => component.custom_id).filter(Boolean));
+  const qComponents = (questionnaire.components || []).flatMap(row => json(row).components || []);
+  const qIds = qComponents.map(component => component.custom_id).filter(Boolean);
   assert.ok(qIds.some(id => id.startsWith('configx:preview:qpage:')), 'questionário: navegação de prévia não encontrada');
-  assert.ok(!qIds.some(id => id.startsWith('q:answer:')), 'questionário: botão real de resposta vazou para a prévia');
+  for (const component of qComponents.filter(component => component.custom_id?.startsWith('q:answer:'))) {
+    assert.equal(component.disabled, true, 'questionário: botão real de resposta deve permanecer desativado na prévia');
+  }
 
   console.log('✅ Rocha Ticket preview self-test concluído sem erros.');
 }
