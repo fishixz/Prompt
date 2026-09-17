@@ -26,6 +26,7 @@ const { executeFun, commandIdForSubcommand: funCommandId } = require('../system/
 const { executeGames, commandIdForSubcommand: gamesCommandId } = require('../system/commands/games');
 const { executeSearch, commandIdForSubcommand: searchCommandId } = require('../system/commands/search');
 const { executeBackup, commandIdForSubcommand: backupCommandId } = require('../system/commands/backup');
+const { executeSupport, commandIdForSubcommand: supportCommandId } = require('../system/commands/support');
 const { colorInt, truncate } = require('../utils/discord');
 
 const EPHEMERAL = MessageFlags.Ephemeral;
@@ -142,37 +143,31 @@ const handleFunCommand = protectedGroup(funCommandId, executeFun);
 const handleGamesCommand = protectedGroup(gamesCommandId, executeGames);
 const handleSearchCommand = protectedGroup(searchCommandId, executeSearch);
 const handleBackupCommand = protectedGroup(backupCommandId, executeBackup);
+const handleSupportCommand = protectedGroup(supportCommandId, executeSupport);
 
 async function handleHelpCommand(interaction) {
   const access = await deny(interaction, 'ajuda');
   if (!access) return true;
-
   const config = await getGuildConfig(interaction.guildId);
   const commands = accessibleCommands(config, interaction.member, interaction.guild, interaction.user.id);
   const tiers = configuredTiers(config, interaction.member);
-  const tierLabel = access.owner
-    ? '👑 Dono'
-    : tiers.map(tier => `${TIER_META[tier]?.emoji || '•'} ${TIER_META[tier]?.label || tier}`).join(', ');
-
+  const tierLabel = access.owner ? '👑 Dono' : tiers.map(tier => `${TIER_META[tier]?.emoji || '•'} ${TIER_META[tier]?.label || tier}`).join(', ');
   const groups = new Map();
   for (const command of commands) {
     if (!groups.has(command.category)) groups.set(command.category, []);
     groups.get(command.category).push(command);
   }
-
   const embed = new EmbedBuilder()
     .setColor(colorInt(config.branding?.color || '#F5A300'))
     .setTitle('🦊 RochaSystem • Comandos disponíveis')
     .setDescription(`**Seu acesso:** ${tierLabel || 'nenhum'}\n\nAqui aparecem somente os comandos que os seus cargos podem utilizar.`)
     .setTimestamp();
-
   for (const [category, list] of groups) {
     const meta = COMMAND_CATEGORIES[category] || { label: category, emoji: '•' };
     const text = list.map(command => `• \`/${command.slash}\` — ${command.label}`).join('\n');
     embed.addFields({ name: `${meta.emoji} ${meta.label}`, value: truncate(text, 1024), inline: false });
     if (embed.data.fields?.length >= 25) break;
   }
-
   if (!groups.size) embed.addFields({ name: 'Sem comandos', value: 'Seu cargo está configurado, mas ainda não possui categorias ou comandos liberados.' });
   return interaction.reply({ embeds: [embed], flags: EPHEMERAL });
 }
@@ -187,6 +182,7 @@ async function handleSystemSlashCommand(interaction) {
     configuracao: handleSettingsCommand,
     utilidade: handleUtilityCommand,
     automod: handleAutomodCommand,
+    suporte: handleSupportCommand,
     nivel: handleLevelsCommand,
     diversao: handleFunCommand,
     jogo: handleGamesCommand,
@@ -209,6 +205,7 @@ module.exports = {
   handleSettingsCommand,
   handleUtilityCommand,
   handleAutomodCommand,
+  handleSupportCommand,
   handleLevelsCommand,
   handleFunCommand,
   handleGamesCommand,
