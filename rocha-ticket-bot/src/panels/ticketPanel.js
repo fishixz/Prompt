@@ -59,10 +59,13 @@ function ticketCreatedEphemeral(config, ticket, channel, ticketType) {
     embeds: [embed],
     components: [
       new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setLabel('Clique aqui para acessar').setEmoji('🔗').setStyle(ButtonStyle.Link).setURL(`https://discord.com/channels/${channel.guild.id}/${channel.id}`)
+        new ButtonBuilder()
+          .setLabel('Clique aqui para acessar')
+          .setEmoji('🔗')
+          .setStyle(ButtonStyle.Link)
+          .setURL(`https://discord.com/channels/${channel.guild.id}/${channel.id}`)
       )
-    ],
-    ephemeral: true
+    ]
   };
 }
 
