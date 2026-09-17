@@ -4,7 +4,8 @@ const {
   GatewayIntentBits,
   Partials,
   ActivityType,
-  Events
+  Events,
+  MessageFlags
 } = require('discord.js');
 const { registerAllSystemCommands, registerGuildSystemCommands } = require('./commands/allCommands');
 const { interactionCreate } = require('./handlers/interactionCreate');
@@ -105,7 +106,7 @@ client.on(Events.InteractionCreate, interaction => {
     console.error('Update command error:', error);
     const content = `❌ Falha no sistema de atualização.\n\`${String(error.message || error).slice(0, 1500)}\``;
     if (interaction.deferred) await interaction.editReply(content).catch(() => null);
-    else if (!interaction.replied) await interaction.reply({ content, ephemeral: true }).catch(() => null);
+    else if (!interaction.replied) await interaction.reply({ content, flags: MessageFlags.Ephemeral }).catch(() => null);
   });
 });
 client.on(Events.InteractionCreate, interactionCreate);
