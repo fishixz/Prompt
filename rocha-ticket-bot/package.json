@@ -1,12 +1,12 @@
 {
-  "name": "rocha-ticket-bot",
-  "version": "1.2.0",
-  "description": "Sistema avançado, configurável e resiliente de tickets para o Rocha Roleplay, compatível com Termux.",
+  "name": "rochasystem",
+  "version": "2.0.0-beta.1",
+  "description": "Sistema multifunções oficial do Rocha Roleplay: tickets, administração, moderação, suporte e utilidades, compatível com Termux.",
   "main": "src/index.js",
   "type": "commonjs",
   "scripts": {
     "start": "node src/index.js",
-    "selftest": "node src/tests/selfTest.js && node src/tests/previewTest.js",
+    "selftest": "node src/tests/selfTest.js && node src/tests/previewTest.js && node src/tests/systemTest.js",
     "check": "find src -name '*.js' -type f -print0 | xargs -0 -n1 node --check && npm run selftest"
   },
   "engines": {
