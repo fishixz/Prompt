@@ -15,6 +15,13 @@ const { colorInt, truncate } = require('../utils/discord');
 const EPHEMERAL = MessageFlags.Ephemeral;
 const PAGE_SIZE = 25;
 
+function cleanUpdatePayload(payload) {
+  const clean = { ...payload };
+  delete clean.ephemeral;
+  delete clean.flags;
+  return clean;
+}
+
 function selectorAssignmentPayload(config, typeId, page = 0) {
   const type = getTicketType(config, typeId);
   if (!type) return null;
@@ -93,7 +100,7 @@ async function handleConfigExtension(interaction) {
     await saveGuildConfig(interaction.guildId, config);
     await recomputeSetup(interaction.guild);
     await syncStaffRolePermissions(interaction.guild, { roleIdsToRemove: oldRoles });
-    return interaction.update(views.permissionsPanel(config));
+    return interaction.update(cleanUpdatePayload(views.permissionsPanel(config)));
   }
 
   if (id.startsWith('config:typeroles:') && interaction.isRoleSelectMenu()) {
@@ -105,7 +112,7 @@ async function handleConfigExtension(interaction) {
     await saveGuildConfig(interaction.guildId, config);
     await recomputeSetup(interaction.guild);
     await syncStaffRolePermissions(interaction.guild, { typeId, roleIdsToRemove: oldRoles });
-    return interaction.update(views.ticketTypeEditor(config, type));
+    return interaction.update(cleanUpdatePayload(views.ticketTypeEditor(config, type)));
   }
 
   if (!id.startsWith('configx:')) return false;
@@ -141,9 +148,7 @@ async function handleConfigExtension(interaction) {
     const typeId = id.split(':').pop();
     const type = getTicketType(config, typeId);
     if (!type) return interaction.update({ content: '❌ Tipo não encontrado.', embeds: [], components: [] });
-    const payload = views.ticketTypeEditor(config, type);
-    delete payload.ephemeral;
-    return interaction.update(payload);
+    return interaction.update(cleanUpdatePayload(views.ticketTypeEditor(config, type)));
   }
 
   return false;
