@@ -5,6 +5,7 @@ const { recomputeSetup } = require('../services/configService');
 const { runDiagnostics } = require('../services/diagnosticService');
 const { consumeCooldown } = require('../services/securityService');
 const { handleCallMemberSelect } = require('../services/callMemberService');
+const { handleTicketPresetInteraction, isTicketPresetId } = require('../services/ticketPresetService');
 const { configHome } = require('../panels/configPanel');
 const { panelMessage } = require('../panels/ticketPanel');
 const { handleConfigComponent, handleConfigModal } = require('./configHandlers');
@@ -69,6 +70,13 @@ function diagnosticField(items, emptyText, limit = 10) {
   return items.length > limit ? `${visible}\n• ... e mais ${items.length - limit}`.slice(0, 1024) : visible.slice(0, 1024);
 }
 
+function formatBytes(bytes) {
+  const value = Number(bytes) || 0;
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / 1024 / 1024).toFixed(2)} MB`;
+}
+
 async function openDiagnostics(interaction) {
   if (!interaction.inGuild()) return interaction.reply({ content: 'Use este comando dentro de um servidor.', flags: MessageFlags.Ephemeral });
   if (!await canConfigure(interaction)) return deny(interaction);
@@ -84,9 +92,10 @@ async function openDiagnostics(interaction) {
       `**Avisos:** ${report.warnings.length}`,
       `**Verificações OK:** ${report.ok.length}`,
       '',
-      `**Tickets:** ${report.stats.totalTickets} no histórico • ${report.stats.activeTickets} ativos`,
-      `**Questionários respondidos:** ${report.stats.questionnaireResponses}`,
-      `**Avaliações registradas:** ${report.stats.ratings}`
+      `**Tickets:** ${report.stats.totalTickets} histórico • ${report.stats.activeTickets} ativos • ${report.stats.closedTickets} fechados • ${report.stats.orphanedTickets} órfãos`,
+      `**Questionários:** ${report.stats.questionnaireResponses} respondidos • ${report.stats.pendingQuestionnaires} pendentes`,
+      `**Avaliações:** ${report.stats.ratings} registradas • ${report.stats.pendingRatings} pendentes`,
+      `**Banco:** ${formatBytes(report.stats.databaseBytes)} • ${report.stats.backups} backup(s)`
     ].join('\n'))
     .addFields(
       { name: '❌ Erros', value: diagnosticField(report.errors, 'Nenhum erro detectado.'), inline: false },
@@ -147,6 +156,10 @@ async function interactionCreate(interaction) {
         });
       }
       return handleTicketCreateSelect(interaction);
+    }
+
+    if (isTicketPresetId(interaction.customId || '')) {
+      return handleTicketPresetInteraction(interaction);
     }
 
     if (interaction.customId?.startsWith('ticket:callmembersel:') && interaction.isUserSelectMenu()) {
