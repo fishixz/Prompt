@@ -6,8 +6,7 @@ const {
   ActivityType,
   Events
 } = require('discord.js');
-const { registerAll, registerGuildCommands } = require('./commands/registerCommands');
-const { registerExtraAll, registerExtraGuildCommands } = require('./commands/extraCommands');
+const { registerAllSystemCommands, registerGuildSystemCommands } = require('./commands/allCommands');
 const { interactionCreate } = require('./handlers/interactionCreate');
 const {
   dueTicketCleanup,
@@ -20,6 +19,7 @@ const { pruneRuntimeState } = require('./services/maintenanceService');
 const { applySystemIdentity } = require('./services/botIdentityService');
 const { handleAutomodMessage } = require('./services/automodService');
 const { handleLevelMessage } = require('./services/levelService');
+const { startAutoUpdateLoop } = require('./services/updateService');
 const { getState, getGuildConfig } = require('./database/store');
 
 const token = process.env.DISCORD_TOKEN;
@@ -41,11 +41,6 @@ const client = new Client({
 async function runMaintenance(readyClient) {
   await dueTicketCleanup(readyClient).catch(error => console.error('Ticket cleanup:', error));
   await pruneRuntimeState().catch(error => console.error('Runtime state cleanup:', error));
-}
-
-async function registerGuildSystem(guild) {
-  await registerGuildCommands(guild);
-  await registerExtraGuildCommands(guild);
 }
 
 client.once(Events.ClientReady, async readyClient => {
@@ -84,16 +79,16 @@ client.once(Events.ClientReady, async readyClient => {
   });
   if (backup) console.log(`💾 Backup automático criado: ${backup.filePath}`);
 
-  await registerAll(readyClient);
-  await registerExtraAll(readyClient);
+  await registerAllSystemCommands(readyClient);
   await runMaintenance(readyClient);
+  startAutoUpdateLoop();
 
   setInterval(() => runMaintenance(readyClient), 60_000).unref();
   setInterval(() => syncAllGuildPermissions(readyClient).catch(error => console.error('Permission sync:', error)), 5 * 60_000).unref();
   setInterval(() => createRollingBackup({ keep: 7 }).catch(error => console.error('Automatic backup:', error)), 24 * 60 * 60_000).unref();
 });
 
-client.on(Events.GuildCreate, guild => registerGuildSystem(guild).catch(error => console.error('Guild command registration:', error)));
+client.on(Events.GuildCreate, guild => registerGuildSystemCommands(guild).catch(error => console.error('Guild command registration:', error)));
 client.on(Events.ChannelDelete, channel => markChannelDeleted(channel.id).catch(error => console.error('Channel delete reconciliation:', error)));
 client.on(Events.MessageCreate, async message => {
   try {
