@@ -8,6 +8,9 @@ const commandData = [
     .setName('painel')
     .setDescription('Publica/atualiza o painel de abertura de tickets.'),
   new SlashCommandBuilder()
+    .setName('preview')
+    .setDescription('Abre a central privada de prévias dos painéis e mensagens do sistema.'),
+  new SlashCommandBuilder()
     .setName('diagnostico')
     .setDescription('Executa uma verificação privada de saúde do sistema de tickets.')
 ].map(command => command.toJSON());
