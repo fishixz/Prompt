@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ChannelType } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 
 const extraCommandData = [
   new SlashCommandBuilder()
@@ -14,6 +14,16 @@ const extraCommandData = [
       .setName('remover-palavra').setDescription('Remove uma palavra ou expressão do filtro.')
       .addStringOption(option => option.setName('palavra').setDescription('Palavra ou expressão a liberar.').setRequired(true).setMinLength(2).setMaxLength(50)))
     .addSubcommand(sub => sub.setName('limpar-palavras').setDescription('Remove todas as palavras do filtro.')),
+
+  new SlashCommandBuilder()
+    .setName('suporte')
+    .setDescription('Ferramentas da equipe de suporte do RochaSystem.')
+    .addSubcommand(sub => sub.setName('abertos').setDescription('Lista os tickets atualmente abertos.'))
+    .addSubcommand(sub => sub.setName('meus').setDescription('Mostra seus atendimentos assumidos.'))
+    .addSubcommand(sub => sub
+      .setName('usuario').setDescription('Consulta o histórico de tickets de um usuário.')
+      .addUserOption(option => option.setName('usuario').setDescription('Usuário consultado.').setRequired(true)))
+    .addSubcommand(sub => sub.setName('estatisticas').setDescription('Mostra estatísticas gerais de atendimento.')),
 
   new SlashCommandBuilder()
     .setName('pesquisa')
@@ -90,9 +100,7 @@ const extraCommandData = [
 ].map(builder => builder.toJSON());
 
 async function registerExtraGuildCommands(guild) {
-  for (const command of extraCommandData) {
-    await guild.commands.create(command);
-  }
+  for (const command of extraCommandData) await guild.commands.create(command);
   console.log(`✅ ${extraCommandData.length} grupos extras do RochaSystem registrados em ${guild.name}.`);
 }
 
