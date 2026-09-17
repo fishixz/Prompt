@@ -1,5 +1,10 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { getGuildConfig } = require('../database/store');
+const {
+  ensureSystemConfig,
+  isOwnerFromConfig,
+  canConfigureRochaSystem
+} = require('../services/accessControlService');
 
 function memberHasAnyRole(member, roleIds = []) {
   if (!member || !roleIds?.length) return false;
@@ -7,25 +12,19 @@ function memberHasAnyRole(member, roleIds = []) {
 }
 
 async function canConfigure(interaction) {
-  if (!interaction.inGuild()) return false;
-  const config = await getGuildConfig(interaction.guildId);
-
-  const hasConfiguredAdmins = Boolean(config.permissions?.adminRoleIds?.length || config.permissions?.adminUserIds?.length);
-  if (!hasConfiguredAdmins && config.security?.allowConfigBeforeSetupForEveryone) {
-    return true;
-  }
-
-  if (config.permissions?.allowGuildOwner && interaction.guild.ownerId === interaction.user.id) return true;
-  if (config.permissions?.adminUserIds?.includes(interaction.user.id)) return true;
-  if (memberHasAnyRole(interaction.member, config.permissions?.adminRoleIds)) return true;
-  if (interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) return true;
-  return false;
+  return canConfigureRochaSystem(interaction);
 }
 
 async function canManageTicket(interaction, ticketType = null) {
   if (!interaction.inGuild()) return false;
   const config = await getGuildConfig(interaction.guildId);
-  if (config.permissions?.allowGuildOwner && interaction.guild.ownerId === interaction.user.id) return true;
+  const system = ensureSystemConfig(config);
+
+  if (isOwnerFromConfig(config, interaction.guild, interaction.member, interaction.user.id)) return true;
+  if (memberHasAnyRole(interaction.member, system.access.moderador?.roleIds || [])) return true;
+  if (memberHasAnyRole(interaction.member, system.access.suporte?.roleIds || [])) return true;
+
+  // Compatibilidade com permissões específicas do sistema de tickets já existente.
   if (config.permissions?.adminUserIds?.includes(interaction.user.id)) return true;
   if (memberHasAnyRole(interaction.member, config.permissions?.adminRoleIds)) return true;
   if (memberHasAnyRole(interaction.member, config.permissions?.staffRoleIds)) return true;
