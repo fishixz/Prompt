@@ -33,14 +33,15 @@ async function syncStaffRolePermissions(guild, { typeId = null, roleIdsToRemove 
     ticket.channelId
   );
 
+  const snapshots = new Map();
   let synced = 0;
+
   for (const ticket of tickets) {
     const type = getTicketType(config, ticket.typeId);
     const desired = new Set([
       ...(config.permissions.staffRoleIds || []),
       ...(type?.staffRoleIds || [])
     ]);
-
     const previous = new Set([
       ...(ticket.syncedStaffRoleIds || []),
       ...roleIdsToRemove
@@ -70,11 +71,17 @@ async function syncStaffRolePermissions(guild, { typeId = null, roleIdsToRemove 
       }
     }
 
-    await mutate(state => {
-      const stored = state.tickets[ticket.uid];
-      if (stored) stored.syncedStaffRoleIds = [...desired];
-    });
+    snapshots.set(ticket.uid, [...desired]);
     synced++;
+  }
+
+  if (snapshots.size) {
+    await mutate(state => {
+      for (const [uid, roles] of snapshots) {
+        const stored = state.tickets[uid];
+        if (stored) stored.syncedStaffRoleIds = roles;
+      }
+    });
   }
 
   return synced;
