@@ -8,6 +8,7 @@ Versão atual do projeto: **1.2.0**.
 
 - `/config` — painel privado e persistente de configuração.
 - `/painel` — publica ou atualiza o painel público de abertura de tickets. Só funciona quando a configuração obrigatória está válida.
+- `/preview` — abre a central privada de prévias dos painéis e mensagens do sistema.
 - `/diagnostico` — verifica configuração, permissões, canais, painel publicado, banco, contador, tickets órfãos, calls, backups e componentes do Discord.
 
 ## Configuração pelo Discord
@@ -38,6 +39,24 @@ Entre as opções disponíveis estão:
 - sincronização manual das permissões dos tickets existentes.
 
 Enquanto nenhum administrador estiver configurado, o comportamento padrão permite usar `/config` para fazer o primeiro setup. Depois disso, o acesso passa a respeitar as permissões configuradas. Essa regra também pode ser ajustada na área avançada.
+
+## Central de prévias
+
+A central pode ser aberta diretamente por `/preview` ou pelo botão **Prévia** dentro da configuração do painel. Ela é privada/efêmera e permite conferir o visual sem criar ticket real nem publicar mensagens.
+
+É possível visualizar:
+
+- painel público de abertura de tickets, incluindo banner e seletores;
+- confirmação privada de ticket criado;
+- painel completo de dentro do ticket, incluindo área do usuário e controles administrativos;
+- questionário obrigatório, com navegação entre páginas sem salvar respostas;
+- painel de avaliação;
+- finalização do ticket e exemplo da DM enviada ao usuário;
+- exemplos de logs;
+- presets de moderação e resultados;
+- prévia de ticket usando um tipo específico já configurado.
+
+Nas prévias, botões de atendimento, respostas, avaliação e demais ações reais ficam desativados. Apenas a navegação segura do questionário de prévia continua ativa.
 
 ## Fluxo do usuário
 
@@ -177,9 +196,10 @@ Ative **Message Content Intent** para que o transcript consiga ler o texto das m
 `npm run check` executa:
 
 1. `node --check` em todos os arquivos JavaScript;
-2. o self-test do projeto.
+2. o self-test principal;
+3. o self-test específico da central de prévias.
 
-O self-test valida, entre outros pontos:
+Os testes validam, entre outros pontos:
 
 - limite de ActionRows/componentes;
 - `custom_id` duplicado;
@@ -193,6 +213,8 @@ O self-test valida, entre outros pontos:
 - questionário;
 - avaliação;
 - payloads de abertura de ticket;
+- central de prévias e seus painéis;
+- segurança dos componentes desativados nas prévias;
 - variáveis e nomes de canais.
 
 O repositório possui GitHub Actions para executar essas verificações a cada alteração no projeto.
