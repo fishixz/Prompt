@@ -19,7 +19,11 @@ fi
 
 printf '\n📦 Instalando dependências JavaScript...\n'
 npm install --no-audit --no-fund
-mkdir -p data
+mkdir -p data data/backups
+chmod +x start-termux.sh
+
+printf '\n🧪 Validando arquivos do projeto...\n'
+npm run check
 
 if [ ! -f .env ]; then
   printf '\n'
@@ -35,5 +39,5 @@ else
   echo 'ℹ️ Arquivo .env já existe; token atual foi mantido.'
 fi
 
-printf '\n✅ Instalação concluída. Iniciando o Rocha Ticket...\n\n'
-exec npm start
+printf '\n✅ Instalação concluída. Iniciando o Rocha Ticket com watchdog...\n\n'
+exec ./start-termux.sh
