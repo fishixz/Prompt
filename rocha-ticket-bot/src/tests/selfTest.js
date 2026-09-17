@@ -5,6 +5,7 @@ const { panelMessage, ticketOpeningMessages, ticketCreatedEphemeral } = require(
 const { duplicatedCustomIds } = require('../services/diagnosticService');
 const { renderQuestionnaire } = require('../services/questionnaireService');
 const { buildRatingPayload } = require('../services/ratingService');
+const { selectorAssignmentPayload } = require('../handlers/configExtensionHandlers');
 const { renderChannelName, renderTemplate, buildVariables } = require('../utils/variables');
 
 function componentJson(component) {
@@ -115,6 +116,18 @@ function run() {
   validatePayload('typePicker 2/3', views.typePicker(manyTypes, 'open', 1));
   validatePayload('typePicker 3/3', views.typePicker(manyTypes, 'open', 2));
 
+  const manySelectors = buildFixture(1);
+  manySelectors.panel.selectors = Array.from({ length: 52 }, (_, index) => ({
+    id: `seletor-${index + 1}`,
+    name: `Seletor ${index + 1}`,
+    placeholder: `Selecionar ${index + 1}`,
+    enabled: true
+  }));
+  manySelectors.ticketTypes[0].selectorId = 'seletor-1';
+  validatePayload('selector assignment 1/3', selectorAssignmentPayload(manySelectors, 'tipo-1', 0));
+  validatePayload('selector assignment 2/3', selectorAssignmentPayload(manySelectors, 'tipo-1', 1));
+  validatePayload('selector assignment 3/3', selectorAssignmentPayload(manySelectors, 'tipo-1', 2));
+
   const pendingSingle = {
     guildId: fakeGuild().id,
     userId: '300',
@@ -153,6 +166,7 @@ function run() {
   assert.equal(vars.user_name, 'tester');
   assert.equal(vars.user_display, 'Tester');
   assert.equal(vars.user_mention, '<@300>');
+  assert.equal(vars.rating_scale, '5');
 
   console.log('✅ Rocha Ticket self-test concluído sem erros.');
 }
