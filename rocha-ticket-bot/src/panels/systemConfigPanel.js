@@ -2,6 +2,8 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  ChannelSelectMenuBuilder,
+  ChannelType,
   EmbedBuilder,
   RoleSelectMenuBuilder,
   StringSelectMenuBuilder
@@ -54,14 +56,29 @@ function systemHomePanel(config) {
     return `${meta.emoji} **${meta.label}:** ${roles}\n└ ${access.categories.length} categoria(s) + ${access.commands.length} comando(s) individual(is)`;
   }).join('\n\n');
 
+  const auditText = system.audit.channelId
+    ? `<#${system.audit.channelId}>`
+    : config.logs?.defaultChannelId
+      ? `herda <#${config.logs.defaultChannelId}>`
+      : '`não configurado`';
+
   const embed = embedBase(config, '🦊 RochaSystem • Controle de Acesso', [
     'Configure quais cargos do Discord representam cada nível do RochaSystem e quais comandos cada nível pode usar.',
     '',
     lines,
     '',
+    `📚 **Canal de auditoria administrativa:** ${auditText}`,
+    '',
     '🔐 Quem **não possuir nenhum dos cargos configurados** não poderá usar comandos do RochaSystem. Isso não impede a interação normal com painéis de ticket.',
     '👑 Comandos de identidade do bot continuam sempre exclusivos do nível **Dono**.'
   ].join('\n'));
+
+  const auditChannel = new ChannelSelectMenuBuilder()
+    .setCustomId('systemcfg:audit')
+    .setPlaceholder('Canal de auditoria das ações administrativas')
+    .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+    .setMinValues(1)
+    .setMaxValues(1);
 
   return {
     embeds: [embed],
@@ -76,7 +93,11 @@ function systemHomePanel(config) {
         new ButtonBuilder().setCustomId('systemcfg:tier:visitante').setLabel('Visitante').setEmoji('👤').setStyle(ButtonStyle.Secondary),
         new ButtonBuilder().setCustomId('systemcfg:profile').setLabel('Perfil do Bot').setEmoji('🤖').setStyle(ButtonStyle.Secondary)
       ),
-      backRow('config:home')
+      new ActionRowBuilder().addComponents(auditChannel),
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('systemcfg:auditclear').setLabel('Limpar canal de auditoria').setEmoji('🧹').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('config:home').setLabel('Voltar').setEmoji('⬅️').setStyle(ButtonStyle.Secondary)
+      )
     ]
   };
 }
