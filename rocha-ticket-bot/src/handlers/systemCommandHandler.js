@@ -20,6 +20,12 @@ const { executeModeration, commandIdForSubcommand: moderationCommandId } = requi
 const { executeOwner, commandIdForSubcommand: ownerCommandId } = require('../system/commands/owner');
 const { executeSettings, commandIdForSubcommand: settingsCommandId } = require('../system/commands/settings');
 const { executeUtility, commandIdForSubcommand: utilityCommandId } = require('../system/commands/utility');
+const { executeAutomod, commandIdForSubcommand: automodCommandId } = require('../system/commands/automod');
+const { executeLevels, commandIdForSubcommand: levelsCommandId } = require('../system/commands/levels');
+const { executeFun, commandIdForSubcommand: funCommandId } = require('../system/commands/fun');
+const { executeGames, commandIdForSubcommand: gamesCommandId } = require('../system/commands/games');
+const { executeSearch, commandIdForSubcommand: searchCommandId } = require('../system/commands/search');
+const { executeBackup, commandIdForSubcommand: backupCommandId } = require('../system/commands/backup');
 const { colorInt, truncate } = require('../utils/discord');
 
 const EPHEMERAL = MessageFlags.Ephemeral;
@@ -73,34 +79,29 @@ async function handleBotCommand(interaction) {
       const value = await setBotName(interaction.client, interaction.guildId, name);
       return interaction.editReply(`✅ Nome do bot alterado para **${value}**.`);
     }
-
     if (sub === 'bio') {
       const bio = interaction.options.getString('descricao', true);
       await setBotBio(interaction.client, interaction.guildId, bio);
       return interaction.editReply('✅ Descrição/Bio do RochaSystem atualizada.');
     }
-
     if (sub === 'avatar') {
       const image = interaction.options.getAttachment('imagem', true);
       if (image.contentType && !image.contentType.startsWith('image/')) throw new Error('Envie um arquivo de imagem válido.');
       await setBotAvatar(interaction.client, interaction.guildId, image.url);
-      return interaction.editReply('✅ Foto do RochaSystem atualizada. O Discord pode levar alguns segundos para refletir a alteração em todos os lugares.');
+      return interaction.editReply('✅ Foto do RochaSystem atualizada.');
     }
-
     if (sub === 'banner') {
       const image = interaction.options.getAttachment('imagem', true);
       if (image.contentType && !image.contentType.startsWith('image/')) throw new Error('Envie um arquivo de imagem válido.');
       await setBotBanner(interaction.client, interaction.guildId, image.url);
       return interaction.editReply('✅ Banner do RochaSystem atualizado.');
     }
-
     if (sub === 'status') {
       const status = interaction.options.getString('status', true);
       const activity = interaction.options.getString('atividade') || '';
       const result = await setBotPresence(interaction.client, interaction.guildId, status, activity);
       return interaction.editReply(`✅ Presença atualizada: **${result.status}**${result.activity ? ` • ${result.activity}` : ''}.`);
     }
-
     return interaction.editReply('❌ Subcomando desconhecido.');
   } catch (error) {
     return interaction.editReply(`❌ Não foi possível alterar o perfil do bot.\n\`${truncate(error.message || String(error), 1500)}\``);
@@ -113,7 +114,6 @@ async function handleProtectedGroup(interaction, commandId, executor) {
     await interaction.reply({ content: `⛔ ${access.reason}`, flags: EPHEMERAL });
     return true;
   }
-
   await interaction.deferReply({ flags: EPHEMERAL });
   try {
     await executor();
@@ -124,35 +124,24 @@ async function handleProtectedGroup(interaction, commandId, executor) {
   return true;
 }
 
-async function handleAdminCommand(interaction) {
-  const sub = interaction.options.getSubcommand();
-  const commandId = adminCommandId(sub);
-  return handleProtectedGroup(interaction, commandId, () => executeAdmin(interaction, sub));
+function protectedGroup(idBuilder, executor) {
+  return async interaction => {
+    const sub = interaction.options.getSubcommand();
+    return handleProtectedGroup(interaction, idBuilder(sub), () => executor(interaction, sub));
+  };
 }
 
-async function handleModerationCommand(interaction) {
-  const sub = interaction.options.getSubcommand();
-  const commandId = moderationCommandId(sub);
-  return handleProtectedGroup(interaction, commandId, () => executeModeration(interaction, sub));
-}
-
-async function handleOwnerCommand(interaction) {
-  const sub = interaction.options.getSubcommand();
-  const commandId = ownerCommandId(sub);
-  return handleProtectedGroup(interaction, commandId, () => executeOwner(interaction, sub));
-}
-
-async function handleSettingsCommand(interaction) {
-  const sub = interaction.options.getSubcommand();
-  const commandId = settingsCommandId(sub);
-  return handleProtectedGroup(interaction, commandId, () => executeSettings(interaction, sub));
-}
-
-async function handleUtilityCommand(interaction) {
-  const sub = interaction.options.getSubcommand();
-  const commandId = utilityCommandId(sub);
-  return handleProtectedGroup(interaction, commandId, () => executeUtility(interaction, sub));
-}
+const handleAdminCommand = protectedGroup(adminCommandId, executeAdmin);
+const handleModerationCommand = protectedGroup(moderationCommandId, executeModeration);
+const handleOwnerCommand = protectedGroup(ownerCommandId, executeOwner);
+const handleSettingsCommand = protectedGroup(settingsCommandId, executeSettings);
+const handleUtilityCommand = protectedGroup(utilityCommandId, executeUtility);
+const handleAutomodCommand = protectedGroup(automodCommandId, executeAutomod);
+const handleLevelsCommand = protectedGroup(levelsCommandId, executeLevels);
+const handleFunCommand = protectedGroup(funCommandId, executeFun);
+const handleGamesCommand = protectedGroup(gamesCommandId, executeGames);
+const handleSearchCommand = protectedGroup(searchCommandId, executeSearch);
+const handleBackupCommand = protectedGroup(backupCommandId, executeBackup);
 
 async function handleHelpCommand(interaction) {
   const access = await deny(interaction, 'ajuda');
@@ -190,7 +179,6 @@ async function handleHelpCommand(interaction) {
 
 async function handleSystemSlashCommand(interaction) {
   if (!interaction.isChatInputCommand()) return false;
-
   const handlers = {
     bot: handleBotCommand,
     admin: handleAdminCommand,
@@ -198,9 +186,14 @@ async function handleSystemSlashCommand(interaction) {
     dono: handleOwnerCommand,
     configuracao: handleSettingsCommand,
     utilidade: handleUtilityCommand,
+    automod: handleAutomodCommand,
+    nivel: handleLevelsCommand,
+    diversao: handleFunCommand,
+    jogo: handleGamesCommand,
+    pesquisa: handleSearchCommand,
+    backup: handleBackupCommand,
     ajuda: handleHelpCommand
   };
-
   const handler = handlers[interaction.commandName];
   if (!handler) return false;
   await handler(interaction);
@@ -215,5 +208,11 @@ module.exports = {
   handleOwnerCommand,
   handleSettingsCommand,
   handleUtilityCommand,
+  handleAutomodCommand,
+  handleLevelsCommand,
+  handleFunCommand,
+  handleGamesCommand,
+  handleSearchCommand,
+  handleBackupCommand,
   handleHelpCommand
 };
