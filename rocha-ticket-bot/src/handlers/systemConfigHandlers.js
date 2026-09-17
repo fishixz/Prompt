@@ -39,6 +39,18 @@ async function handleSystemConfig(interaction) {
     return interaction.update(clean(profilePanel(config)));
   }
 
+  if (id === 'systemcfg:audit' && interaction.isChannelSelectMenu()) {
+    system.audit.channelId = interaction.values[0] || null;
+    await saveGuildConfig(interaction.guildId, config);
+    return interaction.update(clean(systemHomePanel(config)));
+  }
+
+  if (id === 'systemcfg:auditclear') {
+    system.audit.channelId = null;
+    await saveGuildConfig(interaction.guildId, config);
+    return interaction.update(clean(systemHomePanel(config)));
+  }
+
   if (id.startsWith('systemcfg:tier:')) {
     const tier = id.split(':')[2];
     const payload = tierPanel(config, tier);
