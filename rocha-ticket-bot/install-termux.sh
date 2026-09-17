@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 set -euo pipefail
 
-printf '\n🪨 Rocha Ticket • Instalador para Termux\n\n'
+printf '\n🦊 RochaSystem • Instalador para Termux\n\n'
 
 if ! command -v pkg >/dev/null 2>&1; then
   echo '❌ Este instalador foi feito para Termux.'
@@ -39,5 +39,5 @@ else
   echo 'ℹ️ Arquivo .env já existe; token atual foi mantido.'
 fi
 
-printf '\n✅ Instalação concluída. Iniciando o Rocha Ticket com watchdog...\n\n'
+printf '\n✅ Instalação concluída. Iniciando o RochaSystem com watchdog e auto-update...\n\n'
 exec ./start-termux.sh
