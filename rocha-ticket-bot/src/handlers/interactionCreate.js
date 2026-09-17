@@ -7,6 +7,7 @@ const { consumeCooldown } = require('../services/securityService');
 const { handleCallMemberSelect } = require('../services/callMemberService');
 const { handleClaimButton } = require('../services/claimService');
 const { handleTicketPresetInteraction, isTicketPresetId } = require('../services/ticketPresetService');
+const { previewMenu } = require('../services/previewService');
 const { configHome } = require('../panels/configPanel');
 const { panelMessage } = require('../panels/ticketPanel');
 const { handleConfigComponent, handleConfigModal } = require('./configHandlers');
@@ -33,6 +34,13 @@ async function openConfig(interaction) {
   if (!await canConfigure(interaction)) return deny(interaction);
   const { config, validation } = await recomputeSetup(interaction.guild);
   return interaction.reply(asEphemeral(configHome(config, validation)));
+}
+
+async function openPreviews(interaction) {
+  if (!interaction.inGuild()) return interaction.reply({ content: 'Use este comando dentro de um servidor.', flags: MessageFlags.Ephemeral });
+  if (!await canConfigure(interaction)) return deny(interaction);
+  const config = await getGuildConfig(interaction.guildId);
+  return interaction.reply(asEphemeral(previewMenu(config)));
 }
 
 async function publishPanel(interaction) {
@@ -114,6 +122,7 @@ async function interactionCreate(interaction) {
     if (interaction.isChatInputCommand()) {
       if (interaction.commandName === 'config') return openConfig(interaction);
       if (interaction.commandName === 'painel') return publishPanel(interaction);
+      if (interaction.commandName === 'preview') return openPreviews(interaction);
       if (interaction.commandName === 'diagnostico') return openDiagnostics(interaction);
       return;
     }
@@ -188,6 +197,7 @@ async function interactionCreate(interaction) {
 module.exports = {
   interactionCreate,
   openConfig,
+  openPreviews,
   publishPanel,
   openDiagnostics
 };
