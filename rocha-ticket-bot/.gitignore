@@ -2,5 +2,7 @@ node_modules/
 .env
 data/database.json
 data/database.json.tmp
+data/backups/
+data/database.corrupt-*.json
 *.log
 .DS_Store
