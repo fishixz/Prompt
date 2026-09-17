@@ -9,10 +9,7 @@ const {
   StringSelectMenuBuilder,
   UserSelectMenuBuilder
 } = require('discord.js');
-const { colorInt, truncate, navButtons, optionWithEmoji } = (() => {
-  const d = require('../utils/discord');
-  return { ...d, optionWithEmoji: d.optionWithEmoji || ((x) => x) };
-})();
+const { colorInt, truncate, navButtons } = require('../utils/discord');
 const { VARIABLE_DOCS } = require('../utils/variables');
 
 function baseEmbed(config, title, description) {
@@ -26,7 +23,9 @@ function baseEmbed(config, title, description) {
 }
 
 function configHome(config, validation) {
-  const status = validation.ok ? '✅ **Configuração válida.** O `/painel` está liberado.' : '⚠️ **Configuração incompleta.** O `/painel` continuará abrindo esta configuração até tudo obrigatório estar pronto.';
+  const status = validation.ok
+    ? '✅ **Configuração válida.** O `/painel` está liberado.'
+    : '⚠️ **Configuração incompleta.** O `/painel` continuará abrindo esta configuração até tudo obrigatório estar pronto.';
   const missing = validation.missing.length ? `\n\n**Falta configurar:**\n${validation.missing.map(x => `• ${x}`).join('\n')}` : '';
   const warnings = validation.warnings.length ? `\n\n**Avisos:**\n${validation.warnings.map(x => `• ${x}`).join('\n')}` : '';
   const embed = baseEmbed(config, '⚙️ Configuração • Rocha Ticket', `${status}${missing}${warnings}\n\nTodas as alterações são salvas automaticamente no banco local do bot.`);
@@ -59,8 +58,9 @@ function permissionsPanel(config) {
     `**Cargos administradores:** ${config.permissions.adminRoleIds.length ? config.permissions.adminRoleIds.map(id => `<@&${id}>`).join(', ') : '`não definido`'}`,
     `**Usuários administradores:** ${config.permissions.adminUserIds.length ? config.permissions.adminUserIds.map(id => `<@${id}>`).join(', ') : '`nenhum`'}`,
     `**Cargos de atendimento globais:** ${config.permissions.staffRoleIds.length ? config.permissions.staffRoleIds.map(id => `<@&${id}>`).join(', ') : '`não definido`'}`,
+    `**Dono do servidor sempre administra:** ${config.permissions.allowGuildOwner ? '✅ sim' : '⛔ não'}`,
     '',
-    'Enquanto nenhum cargo/usuário administrador estiver definido, qualquer membro pode executar `/config`, como solicitado. Assim que você salvar o primeiro administrador, o painel fica restrito imediatamente.'
+    'Enquanto nenhum cargo/usuário administrador estiver definido, qualquer membro pode executar `/config`. Assim que o primeiro administrador for salvo, o painel fica restrito imediatamente.'
   ].join('\n'));
 
   const adminRoles = new RoleSelectMenuBuilder().setCustomId('config:set:adminroles').setPlaceholder('Selecionar cargos administradores').setMinValues(0).setMaxValues(10);
@@ -73,6 +73,12 @@ function permissionsPanel(config) {
       new ActionRowBuilder().addComponents(adminRoles),
       new ActionRowBuilder().addComponents(staffRoles),
       new ActionRowBuilder().addComponents(adminUsers),
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('config:permissions:toggleowner')
+          .setLabel(config.permissions.allowGuildOwner ? 'Dono sempre admin: ON' : 'Dono sempre admin: OFF')
+          .setStyle(config.permissions.allowGuildOwner ? ButtonStyle.Success : ButtonStyle.Secondary)
+      ),
       navButtons('config:home')
     ],
     ephemeral: true
@@ -88,7 +94,7 @@ function panelSettings(config) {
     `**Banner:** ${p.bannerUrl ? 'configurado' : 'não configurado'}`,
     `**Mensagem publicada:** ${p.messageId ? `\`${p.messageId}\`` : '`ainda não publicada`'}`,
     '',
-    'O botão **Editar visual/textos** permite mudar cor, título, emoji/logo, banner e descrição.'
+    'Você pode alterar canal, cor, título, emoji/logo, banner e descrição.'
   ].join('\n'));
 
   const channel = new ChannelSelectMenuBuilder()
@@ -114,18 +120,26 @@ function panelSettings(config) {
 
 function selectorsPanel(config) {
   const selectors = config.panel.selectors || [];
-  const lines = selectors.length ? selectors.map((s, i) => `${i + 1}. **${s.name}** • ID \`${s.id}\` • ${s.enabled ? '✅ ativo' : '⛔ desativado'}\n   Placeholder: ${s.placeholder}`).join('\n') : '_Nenhum seletor criado._';
-  const embed = baseEmbed(config, '📋 Seletores do painel', `${lines}\n\nCada seletor aceita até **125 tipos ativos** e é dividido automaticamente em menus de até 25 opções.`);
+  const visible = selectors.slice(0, 20);
+  const lines = visible.length
+    ? visible.map((s, i) => `${i + 1}. **${s.name}** • ID \`${s.id}\` • ${s.enabled ? '✅ ativo' : '⛔ desativado'}\n   Placeholder: ${s.placeholder}`).join('\n')
+    : '_Nenhum seletor criado._';
+  const more = selectors.length > visible.length ? `\n\n_+ ${selectors.length - visible.length} seletor(es) adicionais._` : '';
+  const embed = baseEmbed(config, '📋 Seletores do painel', `${lines}${more}\n\nCada seletor é dividido automaticamente em menus de até 25 opções.`);
 
-  const components = [
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('config:selector:new').setLabel('Novo seletor').setEmoji('➕').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('config:selector:editpick').setLabel('Editar').setEmoji('✏️').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('config:selector:deletepick').setLabel('Excluir').setEmoji('🗑️').setStyle(ButtonStyle.Danger)
-    ),
-    navButtons('config:home')
-  ];
-  return { embeds: [embed], components, ephemeral: true };
+  return {
+    embeds: [embed],
+    components: [
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('config:selector:new').setLabel('Novo seletor').setEmoji('➕').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId('config:selector:editpick').setLabel('Editar').setEmoji('✏️').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId('config:selector:togglepick').setLabel('Ativar/Desativar').setEmoji('🔁').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('config:selector:deletepick').setLabel('Excluir').setEmoji('🗑️').setStyle(ButtonStyle.Danger)
+      ),
+      navButtons('config:home')
+    ],
+    ephemeral: true
+  };
 }
 
 function ticketTypesPanel(config, page = 0) {
@@ -139,26 +153,53 @@ function ticketTypesPanel(config, page = 0) {
     return `${globalIndex}. ${t.emoji || '🎫'} **${t.name}** • \`${t.id}\` • ${t.enabled ? '✅' : '⛔'}\n   Categoria: ${t.parentCategoryId ? `<#${t.parentCategoryId}>` : '`não definida`'} • Seletor: \`${t.selectorId || 'nenhum'}\``;
   }).join('\n') : '_Nenhum tipo de ticket criado._';
   const embed = baseEmbed(config, `🎫 Tipos de Ticket • Página ${page + 1}/${pages}`, `${lines}\n\nCada tipo possui categoria própria, nome de canal, cargos, logs individuais e regra de questionário.`);
+
   const components = [
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('config:type:new').setLabel('Criar tipo').setEmoji('➕').setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId('config:type:pick').setLabel('Abrir/Editar').setEmoji('✏️').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('config:type:deletepick').setLabel('Excluir').setEmoji('🗑️').setStyle(ButtonStyle.Danger)
-    ),
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`config:typespage:${Math.max(0, page - 1)}`).setLabel('Anterior').setEmoji('◀️').setStyle(ButtonStyle.Secondary).setDisabled(page <= 0),
-      new ButtonBuilder().setCustomId(`config:typespage:${Math.min(pages - 1, page + 1)}`).setLabel('Próxima').setEmoji('▶️').setStyle(ButtonStyle.Secondary).setDisabled(page >= pages - 1)
-    ),
-    navButtons('config:home')
+    )
   ];
+
+  // Não cria dois botões desativados com o mesmo custom_id quando existe apenas uma página.
+  if (pages > 1) {
+    components.push(new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`config:typespage:${page - 1}`).setLabel('Anterior').setEmoji('◀️').setStyle(ButtonStyle.Secondary).setDisabled(page <= 0),
+      new ButtonBuilder().setCustomId(`config:typespage:${page + 1}`).setLabel('Próxima').setEmoji('▶️').setStyle(ButtonStyle.Secondary).setDisabled(page >= pages - 1)
+    ));
+  }
+  components.push(navButtons('config:home'));
   return { embeds: [embed], components, ephemeral: true };
 }
 
-function typePicker(config, action = 'open') {
-  const options = (config.ticketTypes || []).slice(0, 25).map(t => ({ label: truncate(t.name, 100), value: t.id, description: truncate(t.description || t.id, 100) }));
-  const embed = baseEmbed(config, action === 'delete' ? '🗑️ Excluir tipo de ticket' : '🎫 Escolha o tipo de ticket', options.length ? 'Selecione abaixo.' : 'Nenhum tipo criado.');
+function typePicker(config, action = 'open', page = 0) {
+  const all = config.ticketTypes || [];
+  const pageSize = 25;
+  const pages = Math.max(1, Math.ceil(all.length / pageSize));
+  page = Math.max(0, Math.min(page, pages - 1));
+  const options = all.slice(page * pageSize, page * pageSize + pageSize).map(t => ({
+    label: truncate(t.name, 100),
+    value: t.id,
+    description: truncate(t.description || t.id, 100)
+  }));
+  const embed = baseEmbed(
+    config,
+    action === 'delete' ? `🗑️ Excluir tipo • ${page + 1}/${pages}` : `🎫 Escolha o tipo • ${page + 1}/${pages}`,
+    options.length ? 'Selecione abaixo.' : 'Nenhum tipo criado.'
+  );
   const rows = [];
-  if (options.length) rows.push(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId(`config:type:${action}`).setPlaceholder('Escolha um tipo').addOptions(options)));
+  if (options.length) {
+    rows.push(new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder().setCustomId(`config:type:${action}`).setPlaceholder('Escolha um tipo').addOptions(options)
+    ));
+  }
+  if (pages > 1) {
+    rows.push(new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`config:typepickpage:${action}:${page - 1}`).setLabel('Anterior').setStyle(ButtonStyle.Secondary).setDisabled(page <= 0),
+      new ButtonBuilder().setCustomId(`config:typepickpage:${action}:${page + 1}`).setLabel('Próxima').setStyle(ButtonStyle.Secondary).setDisabled(page >= pages - 1)
+    ));
+  }
   rows.push(navButtons('config:types'));
   return { embeds: [embed], components: rows, ephemeral: true };
 }
@@ -212,7 +253,9 @@ function ticketTypeEditor(config, type) {
 
 function questionnairePanel(config) {
   const q = config.questionnaire;
-  const lines = (q.questions || []).map((item, i) => `${i + 1}. **${item.text}** • ${item.kind === 'text' ? 'texto' : 'seleção'} • ${item.required ? 'obrigatória' : 'opcional'}`).join('\n') || '_Nenhuma pergunta cadastrada._';
+  const visible = (q.questions || []).slice(0, 20);
+  const lines = visible.map((item, i) => `${i + 1}. **${truncate(item.text, 120)}** • ${item.kind === 'text' ? 'texto' : 'seleção'} • ${item.required ? 'obrigatória' : 'opcional'}`).join('\n') || '_Nenhuma pergunta cadastrada._';
+  const more = q.questions.length > visible.length ? `\n_+ ${q.questions.length - visible.length} pergunta(s) adicionais._` : '';
   const embed = baseEmbed(config, '🧠 Questionário obrigatório', [
     `**Ativo:** ${q.enabled ? '✅' : '⛔'}`,
     `**Obrigatório antes do ticket:** ${q.requiredBeforeTicket ? '✅' : '⛔'}`,
@@ -220,7 +263,7 @@ function questionnairePanel(config) {
     `**Canal das respostas:** ${q.responseChannelId ? `<#${q.responseChannelId}>` : '`não definido`'}`,
     '',
     '**Perguntas:**',
-    lines,
+    `${lines}${more}`,
     '',
     'Ao alterar perguntas, use **Nova versão** para obrigar quem já respondeu a responder novamente.'
   ].join('\n'));
@@ -266,6 +309,7 @@ function ratingPanel(config) {
     `**Ativo:** ${r.enabled ? '✅' : '⛔'}`,
     `**Envio:** \`${r.mode}\` (dm, ticket ou both)`,
     `**Canal de log:** ${r.logChannelId ? `<#${r.logChannelId}>` : '`usa log rating/global`'}`,
+    `**Escala:** 1–${r.scale || 5}`,
     `**Comentário obrigatório:** ${r.requireComment ? 'sim' : 'não'}`,
     `**Tempo para avaliar no próprio ticket:** ${r.ticketTimeoutSeconds}s`,
     '',
@@ -278,11 +322,17 @@ function ratingPanel(config) {
     { label: 'Nos dois', value: 'both', emoji: '🔁' }
   );
   const channel = new ChannelSelectMenuBuilder().setCustomId('config:set:ratinglog').setPlaceholder('Canal de logs das avaliações').setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement).setMinValues(1).setMaxValues(1);
+  const scale = new StringSelectMenuBuilder().setCustomId('config:set:ratingscale').setPlaceholder(`Escala atual: 1–${r.scale || 5}`).addOptions(
+    { label: '3 níveis', value: '3', description: 'Avaliação de 1 a 3' },
+    { label: '4 níveis', value: '4', description: 'Avaliação de 1 a 4' },
+    { label: '5 níveis', value: '5', description: 'Avaliação de 1 a 5' }
+  );
   return {
     embeds: [embed],
     components: [
       new ActionRowBuilder().addComponents(mode),
       new ActionRowBuilder().addComponents(channel),
+      new ActionRowBuilder().addComponents(scale),
       new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('config:modal:rating').setLabel('Editar textos/regras').setEmoji('✏️').setStyle(ButtonStyle.Primary),
         new ButtonBuilder().setCustomId('config:rating:togglecomment').setLabel(r.requireComment ? 'Comentário opcional' : 'Exigir comentário').setStyle(ButtonStyle.Secondary),
@@ -307,8 +357,8 @@ function templatesPanel(config) {
 }
 
 function presetsPanel(config) {
-  const mod = (config.presets.moderation || []).map(p => `• **${p.label}** — \`${p.id}\``).join('\n') || '_nenhum_';
-  const res = (config.presets.results || []).map(p => `• **${p.label}** — \`${p.id}\``).join('\n') || '_nenhum_';
+  const mod = (config.presets.moderation || []).slice(0, 15).map(p => `• **${p.label}** — \`${p.id}\``).join('\n') || '_nenhum_';
+  const res = (config.presets.results || []).slice(0, 15).map(p => `• **${p.label}** — \`${p.id}\``).join('\n') || '_nenhum_';
   const embed = baseEmbed(config, '🧰 Presets administrativos', `**Moderação**\n${mod}\n\n**Resultados**\n${res}`);
   const rows = [
     new ActionRowBuilder().addComponents(
@@ -328,10 +378,12 @@ function securityPanel(config) {
     `**1 ticket por usuário:** ${t.oneOpenPerUser ? '✅' : '⛔'}`,
     `**Máximo ativo por usuário:** ${t.maxActiveTicketsPerUser}`,
     `**Impedir bots:** ${s.preventBotsOpeningTickets ? '✅' : '⛔'}`,
-    `**Cooldown de interação:** ${s.cooldownSeconds}s`,
+    `**Cooldown de abertura:** ${s.cooldownSeconds}s`,
     `**Transcript:** ${t.transcriptEnabled ? '✅' : '⛔'}`,
     `**Enviar transcript por DM:** ${t.dmTranscript ? '✅' : '⛔'}`,
-    `**Apagar canal após fechar:** ${t.deleteAfterCloseSeconds}s (quando avaliação não precisa permanecer no canal)`
+    `**Apagar canal após fechar:** ${t.deleteAfterCloseSeconds}s`,
+    `**Tópico do canal:** \`${truncate(t.topicTemplate, 120)}\``,
+    `**Nome da call:** \`${truncate(t.callNameTemplate, 120)}\``
   ].join('\n'));
   return {
     embeds: [embed],
@@ -340,7 +392,11 @@ function securityPanel(config) {
         new ButtonBuilder().setCustomId('config:security:oneopen').setLabel('Alternar 1 ticket').setStyle(ButtonStyle.Secondary),
         new ButtonBuilder().setCustomId('config:security:transcript').setLabel('Alternar transcript').setStyle(ButtonStyle.Secondary),
         new ButtonBuilder().setCustomId('config:security:dmtranscript').setLabel('Alternar DM transcript').setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId('config:modal:security').setLabel('Editar números').setEmoji('✏️').setStyle(ButtonStyle.Primary)
+        new ButtonBuilder().setCustomId('config:security:preventbots').setLabel(s.preventBotsOpeningTickets ? 'Bots: bloqueados' : 'Bots: permitidos').setStyle(ButtonStyle.Secondary)
+      ),
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('config:modal:security').setLabel('Editar números').setEmoji('🔢').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId('config:modal:ticketrules').setLabel('Tópico/Call').setEmoji('✏️').setStyle(ButtonStyle.Primary)
       ),
       navButtons('config:home')
     ],
