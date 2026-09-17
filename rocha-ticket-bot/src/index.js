@@ -8,6 +8,7 @@ const {
 } = require('discord.js');
 const { registerAllSystemCommands, registerGuildSystemCommands } = require('./commands/allCommands');
 const { interactionCreate } = require('./handlers/interactionCreate');
+const { handleUpdateCommand } = require('./handlers/updateHandler');
 const {
   dueTicketCleanup,
   reconcileTickets,
@@ -97,6 +98,15 @@ client.on(Events.MessageCreate, async message => {
   } catch (error) {
     console.error('Message systems error:', error);
   }
+});
+client.on(Events.InteractionCreate, interaction => {
+  if (!interaction.isChatInputCommand() || interaction.commandName !== 'update') return;
+  handleUpdateCommand(interaction).catch(async error => {
+    console.error('Update command error:', error);
+    const content = `❌ Falha no sistema de atualização.\n\`${String(error.message || error).slice(0, 1500)}\``;
+    if (interaction.deferred) await interaction.editReply(content).catch(() => null);
+    else if (!interaction.replied) await interaction.reply({ content, ephemeral: true }).catch(() => null);
+  });
 });
 client.on(Events.InteractionCreate, interactionCreate);
 client.on(Events.Error, error => console.error('Discord client error:', error));
