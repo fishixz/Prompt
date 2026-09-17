@@ -1,14 +1,19 @@
 const {
   ActionRowBuilder,
+  AttachmentBuilder,
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
   MessageFlags,
-  StringSelectMenuBuilder
+  ModalBuilder,
+  StringSelectMenuBuilder,
+  TextInputBuilder,
+  TextInputStyle
 } = require('discord.js');
-const { getGuildConfig, saveGuildConfig } = require('../database/store');
+const { getGuildConfig, saveGuildConfig, backupString } = require('../database/store');
 const { getTicketType, recomputeSetup } = require('../services/configService');
 const { syncStaffRolePermissions } = require('../services/permissionSyncService');
+const { createRollingBackup } = require('../services/backupService');
 const views = require('../panels/configPanel');
 const { colorInt, truncate } = require('../utils/discord');
 
@@ -20,6 +25,54 @@ function cleanUpdatePayload(payload) {
   delete clean.ephemeral;
   delete clean.flags;
   return clean;
+}
+
+function advancedStatusPanel(config, validation = null) {
+  const setup = validation?.ok ?? config.setupComplete;
+  const embed = new EmbedBuilder()
+    .setColor(colorInt(config.branding.color))
+    .setTitle('💾 Backup, Status e Configurações Avançadas')
+    .setDescription([
+      `**Setup:** ${setup ? '✅ válido' : '⚠️ incompleto'}`,
+      `**Tipos de ticket:** ${config.ticketTypes?.length || 0}`,
+      `**Seletores:** ${config.panel?.selectors?.length || 0}`,
+      `**Perguntas:** ${config.questionnaire?.questions?.length || 0}`,
+      '',
+      `**Questionário obrigatório global:** ${config.questionnaire?.requiredBeforeTicket ? '✅' : '⛔'}`,
+      `**/config liberado antes de definir administradores:** ${config.security?.allowConfigBeforeSetupForEveryone ? '✅' : '⛔'}`,
+      `**Usuário sair mantém ticket aberto:** ${config.ticket?.userExitKeepsOpen !== false ? '✅ (comportamento do Rocha)' : '⛔'}`,
+      `**Template do título do painel:** \`${truncate(config.panel?.titleTemplate || '{logo} {panel_title}', 150)}\``,
+      '',
+      'Backups automáticos são mantidos localmente em `data/backups/`. O banco também possui recuperação automática caso o JSON principal seja corrompido.'
+    ].join('\n'))
+    .setTimestamp();
+
+  return {
+    embeds: [embed],
+    components: [
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('configx:backupdownload').setLabel('Baixar backup').setEmoji('⬇️').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId('configx:backupnow').setLabel('Criar backup local').setEmoji('💾').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('configx:syncperms').setLabel('Sincronizar permissões').setEmoji('🔐').setStyle(ButtonStyle.Secondary)
+      ),
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('configx:qrequired')
+          .setLabel(config.questionnaire?.requiredBeforeTicket ? 'Questionário não obrigatório' : 'Questionário obrigatório')
+          .setEmoji('🧠')
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId('configx:preconfig')
+          .setLabel(config.security?.allowConfigBeforeSetupForEveryone ? 'Restringir pré-config' : 'Liberar pré-config')
+          .setEmoji('🛡️')
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('configx:paneltitle').setLabel('Template do título').setEmoji('🏷️').setStyle(ButtonStyle.Primary)
+      ),
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('config:home').setLabel('Início').setEmoji('🏠').setStyle(ButtonStyle.Secondary)
+      )
+    ]
+  };
 }
 
 function selectorAssignmentPayload(config, typeId, page = 0) {
@@ -87,6 +140,11 @@ async function handleConfigExtension(interaction) {
   const id = interaction.customId || '';
   const config = await getGuildConfig(interaction.guildId);
 
+  if (id === 'config:backup') {
+    const { validation } = await recomputeSetup(interaction.guild);
+    return interaction.update(advancedStatusPanel(config, validation));
+  }
+
   if (id.startsWith('config:typeselector:')) {
     const typeId = id.split(':').pop();
     const payload = selectorAssignmentPayload(config, typeId, 0);
@@ -116,6 +174,59 @@ async function handleConfigExtension(interaction) {
   }
 
   if (!id.startsWith('configx:')) return false;
+
+  if (id === 'configx:backupdownload') {
+    const json = await backupString();
+    const file = new AttachmentBuilder(Buffer.from(json, 'utf8'), { name: `rocha-ticket-backup-${interaction.guildId}.json` });
+    return interaction.reply({ content: '💾 Backup atual do banco:', files: [file], flags: EPHEMERAL });
+  }
+
+  if (id === 'configx:backupnow') {
+    const result = await createRollingBackup({ keep: 7 });
+    return interaction.reply({ content: `✅ Backup local criado com sucesso. Mantendo até **${result.kept}** cópia(s).`, flags: EPHEMERAL });
+  }
+
+  if (id === 'configx:syncperms') {
+    const count = await syncStaffRolePermissions(interaction.guild);
+    return interaction.reply({ content: `✅ Permissões sincronizadas em **${count}** ticket(s) deste servidor.`, flags: EPHEMERAL });
+  }
+
+  if (id === 'configx:qrequired') {
+    config.questionnaire.requiredBeforeTicket = !config.questionnaire.requiredBeforeTicket;
+    await saveGuildConfig(interaction.guildId, config);
+    const { validation } = await recomputeSetup(interaction.guild);
+    return interaction.update(advancedStatusPanel(config, validation));
+  }
+
+  if (id === 'configx:preconfig') {
+    config.security.allowConfigBeforeSetupForEveryone = !config.security.allowConfigBeforeSetupForEveryone;
+    await saveGuildConfig(interaction.guildId, config);
+    const { validation } = await recomputeSetup(interaction.guild);
+    return interaction.update(advancedStatusPanel(config, validation));
+  }
+
+  if (id === 'configx:paneltitle') {
+    const input = new TextInputBuilder()
+      .setCustomId('value')
+      .setLabel('Template do título do painel')
+      .setStyle(TextInputStyle.Short)
+      .setRequired(true)
+      .setMaxLength(200)
+      .setValue(String(config.panel.titleTemplate || '{logo} {panel_title}').slice(0, 200));
+    const modal = new ModalBuilder()
+      .setCustomId('configx:paneltitlesubmit')
+      .setTitle('Template do título')
+      .addComponents(new ActionRowBuilder().addComponents(input));
+    return interaction.showModal(modal);
+  }
+
+  if (id === 'configx:paneltitlesubmit' && interaction.isModalSubmit()) {
+    const value = interaction.fields.getTextInputValue('value').trim();
+    if (!value) return interaction.reply({ content: '❌ O template não pode ficar vazio.', flags: EPHEMERAL });
+    config.panel.titleTemplate = value;
+    await saveGuildConfig(interaction.guildId, config);
+    return interaction.reply({ content: '✅ Template do título do painel atualizado.', flags: EPHEMERAL });
+  }
 
   if (id.startsWith('configx:typeselectorpage:')) {
     const [, , typeId, rawPage] = id.split(':');
@@ -155,10 +266,16 @@ async function handleConfigExtension(interaction) {
 }
 
 function isConfigExtensionId(id = '') {
-  return id.startsWith('configx:')
+  return id === 'config:backup'
+    || id.startsWith('configx:')
     || id.startsWith('config:typeselector:')
     || id === 'config:set:staffroles'
     || id.startsWith('config:typeroles:');
 }
 
-module.exports = { handleConfigExtension, isConfigExtensionId, selectorAssignmentPayload };
+module.exports = {
+  handleConfigExtension,
+  isConfigExtensionId,
+  selectorAssignmentPayload,
+  advancedStatusPanel
+};
