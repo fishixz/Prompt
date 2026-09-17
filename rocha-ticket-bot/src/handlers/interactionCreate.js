@@ -4,6 +4,7 @@ const { canConfigure } = require('../utils/permissions');
 const { recomputeSetup } = require('../services/configService');
 const { runDiagnostics } = require('../services/diagnosticService');
 const { consumeCooldown } = require('../services/securityService');
+const { handleCallMemberSelect } = require('../services/callMemberService');
 const { configHome } = require('../panels/configPanel');
 const { panelMessage } = require('../panels/ticketPanel');
 const { handleConfigComponent, handleConfigModal } = require('./configHandlers');
@@ -139,6 +140,10 @@ async function interactionCreate(interaction) {
         });
       }
       return handleTicketCreateSelect(interaction);
+    }
+
+    if (interaction.customId?.startsWith('ticket:callmembersel:') && interaction.isUserSelectMenu()) {
+      return handleCallMemberSelect(interaction);
     }
 
     if (interaction.customId?.startsWith('ticket:')) {
