@@ -8,6 +8,7 @@ const { handleCallMemberSelect } = require('../services/callMemberService');
 const { configHome } = require('../panels/configPanel');
 const { panelMessage } = require('../panels/ticketPanel');
 const { handleConfigComponent, handleConfigModal } = require('./configHandlers');
+const { handleConfigExtension, isConfigExtensionId } = require('./configExtensionHandlers');
 const { handleQuestionnaireComponent, handleQuestionnaireModal } = require('./questionnaireHandlers');
 const { handleTicketCreateSelect, handleTicketButton, handleTicketSelect, handleTicketModal } = require('./ticketHandlers');
 const { handleRatingButton, handleRatingModal } = require('./ratingHandlers');
@@ -105,6 +106,12 @@ async function interactionCreate(interaction) {
       if (interaction.commandName === 'painel') return publishPanel(interaction);
       if (interaction.commandName === 'diagnostico') return openDiagnostics(interaction);
       return;
+    }
+
+    if (isConfigExtensionId(interaction.customId || '')) {
+      if (!interaction.inGuild()) return deny(interaction);
+      if (!await canConfigure(interaction)) return deny(interaction);
+      return handleConfigExtension(interaction);
     }
 
     if (interaction.customId?.startsWith('config:')) {
