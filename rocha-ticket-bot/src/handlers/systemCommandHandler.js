@@ -15,6 +15,8 @@ const {
   setBotPresence
 } = require('../services/botIdentityService');
 const { COMMAND_CATEGORIES } = require('../system/commandCatalog');
+const { executeAdmin, commandIdForSubcommand: adminCommandId } = require('../system/commands/admin');
+const { executeModeration, commandIdForSubcommand: moderationCommandId } = require('../system/commands/moderation');
 const { colorInt, truncate } = require('../utils/discord');
 
 const EPHEMERAL = MessageFlags.Ephemeral;
@@ -102,6 +104,35 @@ async function handleBotCommand(interaction) {
   }
 }
 
+async function handleProtectedGroup(interaction, commandId, executor) {
+  const access = await canUseSystemCommand(interaction, commandId);
+  if (!access.allowed) {
+    await interaction.reply({ content: `⛔ ${access.reason}`, flags: EPHEMERAL });
+    return true;
+  }
+
+  await interaction.deferReply({ flags: EPHEMERAL });
+  try {
+    await executor();
+  } catch (error) {
+    const message = truncate(error?.message || String(error), 1600);
+    await interaction.editReply(`❌ Não foi possível concluir a ação.\n\`${message}\``).catch(() => null);
+  }
+  return true;
+}
+
+async function handleAdminCommand(interaction) {
+  const sub = interaction.options.getSubcommand();
+  const commandId = adminCommandId(sub);
+  return handleProtectedGroup(interaction, commandId, () => executeAdmin(interaction, sub));
+}
+
+async function handleModerationCommand(interaction) {
+  const sub = interaction.options.getSubcommand();
+  const commandId = moderationCommandId(sub);
+  return handleProtectedGroup(interaction, commandId, () => executeModeration(interaction, sub));
+}
+
 async function handleHelpCommand(interaction) {
   const access = await deny(interaction, 'ajuda');
   if (!access) return true;
@@ -142,6 +173,14 @@ async function handleSystemSlashCommand(interaction) {
     await handleBotCommand(interaction);
     return true;
   }
+  if (interaction.commandName === 'admin') {
+    await handleAdminCommand(interaction);
+    return true;
+  }
+  if (interaction.commandName === 'moderacao') {
+    await handleModerationCommand(interaction);
+    return true;
+  }
   if (interaction.commandName === 'ajuda') {
     await handleHelpCommand(interaction);
     return true;
@@ -149,4 +188,10 @@ async function handleSystemSlashCommand(interaction) {
   return false;
 }
 
-module.exports = { handleSystemSlashCommand, handleBotCommand, handleHelpCommand };
+module.exports = {
+  handleSystemSlashCommand,
+  handleBotCommand,
+  handleAdminCommand,
+  handleModerationCommand,
+  handleHelpCommand
+};
