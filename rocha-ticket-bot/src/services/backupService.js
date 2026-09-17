@@ -1,6 +1,6 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
-const { DB_PATH, getState } = require('../database/store');
+const { DB_PATH, getState, persist } = require('../database/store');
 
 const BACKUP_DIR = path.join(path.dirname(DB_PATH), 'backups');
 const DEFAULT_KEEP = 7;
@@ -12,10 +12,10 @@ function backupFileName(date = new Date()) {
 
 async function createRollingBackup({ keep = DEFAULT_KEEP } = {}) {
   await getState();
+  await persist();
   await fs.mkdir(BACKUP_DIR, { recursive: true });
 
   const data = await fs.readFile(DB_PATH, 'utf8');
-  // Valida antes de guardar uma cópia potencialmente corrompida.
   JSON.parse(data);
 
   const filePath = path.join(BACKUP_DIR, backupFileName());
