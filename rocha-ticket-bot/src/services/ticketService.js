@@ -9,7 +9,6 @@ const { buildVariables, renderChannelName, renderTemplate } = require('../utils/
 const { ticketOpeningMessages } = require('../panels/ticketPanel');
 const { sendLog } = require('./logService');
 
-// Evita duas aberturas simultâneas para o mesmo usuário no mesmo servidor.
 const creationLocks = new Set();
 
 function creationLockKey(guildId, userId) {
@@ -22,13 +21,10 @@ async function nextTicketNumber(guildId, start = 1) {
     const highestExisting = Object.values(db.tickets)
       .filter(t => t.guildId === guildId && Number.isFinite(Number(t.number)))
       .reduce((max, t) => Math.max(max, Number(t.number)), 0);
-
-    // Nunca volta o contador para trás, mesmo que o valor configurado seja menor.
     const minimumNext = Math.max(configuredStart, highestExisting + 1);
     if (db.counters[guildId] == null || Number(db.counters[guildId]) < minimumNext) {
       db.counters[guildId] = minimumNext;
     }
-
     const current = Number(db.counters[guildId]);
     db.counters[guildId] = current + 1;
     return current;
@@ -75,6 +71,15 @@ function permissionOverwrites(guild, userId, botId, roleIds) {
   return list;
 }
 
+async function updateTicket(uid, patch) {
+  return mutate(db => {
+    const ticket = db.tickets[uid];
+    if (!ticket) return null;
+    Object.assign(ticket, typeof patch === 'function' ? patch(ticket) : patch);
+    return ticket;
+  });
+}
+
 async function markOrphaned(uid, reason = 'Canal do ticket não existe mais.') {
   return updateTicket(uid, {
     status: 'orphaned',
@@ -86,22 +91,20 @@ async function markOrphaned(uid, reason = 'Canal do ticket não existe mais.') {
 
 async function pruneMissingOpenTickets(guild, userId = null) {
   const db = await getState();
-  const candidates = Object.values(db.tickets).filter(t =>
-    t.guildId === guild.id &&
-    (!userId || t.userId === userId) &&
-    ['creating', 'open', 'closing'].includes(t.status)
+  const candidates = Object.values(db.tickets).filter(ticket =>
+    ticket.guildId === guild.id &&
+    (!userId || ticket.userId === userId) &&
+    ['creating', 'open', 'closing'].includes(ticket.status)
   );
 
   for (const ticket of candidates) {
     if (!ticket.channelId) {
-      // Um registro em creating muito antigo pode ter sido interrompido antes da criação do canal.
       const age = Date.now() - new Date(ticket.createdAt || 0).getTime();
       if (ticket.status !== 'creating' || age > 120_000) {
         await markOrphaned(ticket.uid, 'Criação interrompida antes de gerar o canal.');
       }
       continue;
     }
-
     const channel = guild.channels.cache.get(ticket.channelId)
       || await guild.channels.fetch(ticket.channelId).catch(() => null);
     if (!channel) await markOrphaned(ticket.uid, 'Canal do ticket foi removido manualmente ou não existe mais.');
@@ -111,9 +114,9 @@ async function pruneMissingOpenTickets(guild, userId = null) {
 async function createTicket(guild, user, typeId) {
   const lockKey = creationLockKey(guild.id, user.id);
   if (creationLocks.has(lockKey)) {
-    const err = new Error('Já existe uma criação de ticket em andamento para você. Aguarde alguns segundos.');
-    err.code = 'TICKET_CREATING';
-    throw err;
+    const error = new Error('Já existe uma criação de ticket em andamento para você. Aguarde alguns segundos.');
+    error.code = 'TICKET_CREATING';
+    throw error;
   }
 
   creationLocks.add(lockKey);
@@ -123,19 +126,18 @@ async function createTicket(guild, user, typeId) {
     if (!type || !type.enabled) throw new Error('Esse tipo de ticket não existe ou está desativado.');
     if (config.security.preventBotsOpeningTickets && user.bot) throw new Error('Bots não podem abrir tickets.');
 
-    // Remove travas fantasmas causadas por canais apagados fora do bot.
     await pruneMissingOpenTickets(guild, user.id);
 
     const currentOpen = await findOpenTickets(guild.id, user.id);
     const max = config.ticket.oneOpenPerUser ? 1 : Math.max(1, Number(config.ticket.maxActiveTicketsPerUser) || 1);
     if (currentOpen.length >= max) {
       const existing = currentOpen[0];
-      const err = new Error(existing.channelId
+      const error = new Error(existing.channelId
         ? `Você já possui um ticket aberto: <#${existing.channelId}>`
         : 'Você já possui um ticket em processo de abertura.');
-      err.code = 'OPEN_TICKET';
-      err.ticket = existing;
-      throw err;
+      error.code = 'OPEN_TICKET';
+      error.ticket = existing;
+      throw error;
     }
 
     const number = await nextTicketNumber(guild.id, config.ticket.counterStart);
@@ -146,6 +148,8 @@ async function createTicket(guild, user, typeId) {
       number,
       guildId: guild.id,
       userId: user.id,
+      userName: user.username || '',
+      userDisplay: member?.displayName || user.globalName || user.username || '',
       typeId,
       typeName: type.name,
       status: 'creating',
@@ -153,12 +157,11 @@ async function createTicket(guild, user, typeId) {
       createdAt: new Date().toISOString()
     };
 
-    // Reserva o ticket no banco antes de criar o canal.
     await mutate(db => { db.tickets[uid] = tempTicket; });
 
     const vars = buildVariables({ guild, member, user, ticket: tempTicket, ticketType: type, config });
     const channelName = renderChannelName(type.channelNameTemplate || config.ticket.defaultNameTemplate, vars);
-    const roleIds = [...(config.permissions.staffRoleIds || []), ...(type.staffRoleIds || [])];
+    const roleIds = [...new Set([...(config.permissions.staffRoleIds || []), ...(type.staffRoleIds || [])])];
 
     let channel;
     try {
@@ -182,10 +185,13 @@ async function createTicket(guild, user, typeId) {
       status: 'open',
       selectorId: type.selectorId,
       claimedBy: null,
+      claimedByName: null,
+      claimedByDisplay: null,
       claimedAt: null,
       addedMembers: [],
       notes: [],
       callChannelId: null,
+      syncedStaffRoleIds: roleIds,
       userLeftAt: null,
       closeReason: null,
       closedAt: null,
@@ -211,17 +217,16 @@ async function createTicket(guild, user, typeId) {
   }
 }
 
-async function updateTicket(uid, patch) {
-  return mutate(db => {
-    const t = db.tickets[uid];
-    if (!t) return null;
-    Object.assign(t, typeof patch === 'function' ? patch(t) : patch);
-    return t;
+async function setClaimed(uid, userOrId) {
+  const user = userOrId?.user || (typeof userOrId === 'object' ? userOrId : null);
+  const userId = typeof userOrId === 'string' ? userOrId : user?.id;
+  if (!userId) return null;
+  return updateTicket(uid, {
+    claimedBy: userId,
+    claimedByName: user?.username || null,
+    claimedByDisplay: userOrId?.displayName || user?.globalName || user?.username || null,
+    claimedAt: new Date().toISOString()
   });
-}
-
-async function setClaimed(uid, userId) {
-  return updateTicket(uid, { claimedBy: userId, claimedAt: new Date().toISOString() });
 }
 
 async function markUserExited(uid) {
@@ -229,15 +234,15 @@ async function markUserExited(uid) {
 }
 
 async function addTicketMember(uid, userId) {
-  return updateTicket(uid, t => ({ addedMembers: [...new Set([...(t.addedMembers || []), userId])] }));
+  return updateTicket(uid, ticket => ({ addedMembers: [...new Set([...(ticket.addedMembers || []), userId])] }));
 }
 
 async function removeTicketMember(uid, userId) {
-  return updateTicket(uid, t => ({ addedMembers: (t.addedMembers || []).filter(id => id !== userId) }));
+  return updateTicket(uid, ticket => ({ addedMembers: (ticket.addedMembers || []).filter(id => id !== userId) }));
 }
 
 async function addInternalNote(uid, note, staffId) {
-  return updateTicket(uid, t => ({ notes: [...(t.notes || []), { note, staffId, createdAt: new Date().toISOString() }] }));
+  return updateTicket(uid, ticket => ({ notes: [...(ticket.notes || []), { note, staffId, createdAt: new Date().toISOString() }] }));
 }
 
 async function markClosing(uid, reason, staffId) {
@@ -322,7 +327,6 @@ async function reconcileTickets(client) {
         }
       }
 
-      // Se o processo caiu durante o fechamento, devolve o ticket para open.
       if (ticket.status === 'closing') {
         await rollbackClosing(ticket.uid);
         recoveredClosing++;
@@ -352,8 +356,8 @@ async function dueTicketCleanup(client) {
     const channel = guild.channels.cache.get(ticket.channelId) || await guild.channels.fetch(ticket.channelId).catch(() => null);
     if (channel) await channel.delete('Limpeza automática de ticket finalizado').catch(() => null);
     if (ticket.callChannelId) {
-      const vc = guild.channels.cache.get(ticket.callChannelId) || await guild.channels.fetch(ticket.callChannelId).catch(() => null);
-      if (vc) await vc.delete('Limpeza automática da call do ticket').catch(() => null);
+      const voice = guild.channels.cache.get(ticket.callChannelId) || await guild.channels.fetch(ticket.callChannelId).catch(() => null);
+      if (voice) await voice.delete('Limpeza automática da call do ticket').catch(() => null);
     }
     await updateTicket(ticket.uid, { deleteAt: null, callChannelId: null });
   }
