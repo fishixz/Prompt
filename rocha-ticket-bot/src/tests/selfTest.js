@@ -3,7 +3,9 @@ const { defaultGuildConfig } = require('../config/defaultConfig');
 const views = require('../panels/configPanel');
 const { panelMessage, ticketOpeningMessages, ticketCreatedEphemeral } = require('../panels/ticketPanel');
 const { duplicatedCustomIds } = require('../services/diagnosticService');
-const { renderChannelName, renderTemplate } = require('../utils/variables');
+const { renderQuestionnaire } = require('../services/questionnaireService');
+const { buildRatingPayload } = require('../services/ratingService');
+const { renderChannelName, renderTemplate, buildVariables } = require('../utils/variables');
 
 function componentJson(component) {
   return typeof component?.toJSON === 'function' ? component.toJSON() : component;
@@ -31,7 +33,7 @@ function validatePayload(name, payload) {
   }
 }
 
-function buildFixture() {
+function buildFixture(typeCount = 12) {
   const config = defaultGuildConfig('123456789012345678');
   config.permissions.adminRoleIds = ['100000000000000001'];
   config.permissions.staffRoleIds = ['100000000000000002'];
@@ -44,9 +46,17 @@ function buildFixture() {
       kind: 'single',
       options: ['TikTok', 'Instagram', 'YouTube'],
       required: true
+    },
+    {
+      id: 'q_reason',
+      text: 'Explique o motivo do contato.',
+      description: 'Escreva os detalhes.',
+      kind: 'text',
+      options: [],
+      required: true
     }
   ];
-  config.ticketTypes = Array.from({ length: 12 }, (_, index) => ({
+  config.ticketTypes = Array.from({ length: typeCount }, (_, index) => ({
     id: `tipo-${index + 1}`,
     name: `Tipo ${index + 1}`,
     description: `Atendimento ${index + 1}`,
@@ -97,20 +107,52 @@ function run() {
 
   for (const [name, payload] of payloads) validatePayload(name, payload);
 
-  const onePage = buildFixture();
-  onePage.ticketTypes = onePage.ticketTypes.slice(0, 1);
+  const onePage = buildFixture(1);
   validatePayload('ticketTypesPanel single page', views.ticketTypesPanel(onePage, 0));
 
+  const manyTypes = buildFixture(55);
+  validatePayload('typePicker 1/3', views.typePicker(manyTypes, 'open', 0));
+  validatePayload('typePicker 2/3', views.typePicker(manyTypes, 'open', 1));
+  validatePayload('typePicker 3/3', views.typePicker(manyTypes, 'open', 2));
+
+  const pendingSingle = {
+    guildId: fakeGuild().id,
+    userId: '300',
+    typeId: 'tipo-1',
+    page: 0,
+    answers: {},
+    startedAt: new Date().toISOString()
+  };
+  validatePayload('questionnaire single', renderQuestionnaire(config, pendingSingle));
+  validatePayload('questionnaire text', renderQuestionnaire(config, { ...pendingSingle, page: 1 }));
+
   const fakeChannel = { id: '200', name: 'ticket-suporte-0001', guild: fakeGuild() };
-  const fakeUser = { id: '300', username: 'tester' };
-  const fakeTicket = { uid: 't_test', number: 1, userId: '300', typeId: 'tipo-1', typeName: 'Tipo 1', createdAt: new Date().toISOString() };
+  const fakeUser = { id: '300', username: 'tester', globalName: 'Tester' };
+  const fakeTicket = {
+    uid: 't_test',
+    number: 1,
+    guildId: fakeGuild().id,
+    userId: '300',
+    userName: 'tester',
+    userDisplay: 'Tester',
+    typeId: 'tipo-1',
+    typeName: 'Tipo 1',
+    createdAt: new Date().toISOString()
+  };
+
   validatePayload('ticket created ephemeral', ticketCreatedEphemeral(config, fakeTicket, fakeChannel, config.ticketTypes[0]));
   for (const [index, payload] of ticketOpeningMessages(config, fakeTicket, config.ticketTypes[0], fakeChannel, fakeUser).entries()) {
     validatePayload(`ticket opening ${index + 1}`, payload);
   }
+  validatePayload('rating payload', buildRatingPayload(config, fakeGuild(), fakeTicket, config.ticketTypes[0]));
 
   assert.equal(renderChannelName('ticket-{ticket_type_slug}-{ticket_id}', { ticket_type_slug: 'suporte', ticket_id: '0001' }), 'ticket-suporte-0001');
   assert.equal(renderTemplate('Olá {user_name}', { user_name: 'Edy' }), 'Olá Edy');
+
+  const vars = buildVariables({ guild: fakeGuild(), ticket: fakeTicket, config });
+  assert.equal(vars.user_name, 'tester');
+  assert.equal(vars.user_display, 'Tester');
+  assert.equal(vars.user_mention, '<@300>');
 
   console.log('✅ Rocha Ticket self-test concluído sem erros.');
 }
