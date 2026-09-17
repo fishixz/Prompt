@@ -55,6 +55,11 @@ const COMMAND_CATALOG = [
   { id: 'automod.remover-palavra', slash: 'automod remover-palavra', label: 'Liberar palavra', category: 'automod' },
   { id: 'automod.limpar-palavras', slash: 'automod limpar-palavras', label: 'Limpar filtro', category: 'automod' },
 
+  { id: 'suporte.abertos', slash: 'suporte abertos', label: 'Ver tickets abertos', category: 'suporte' },
+  { id: 'suporte.meus', slash: 'suporte meus', label: 'Meus atendimentos', category: 'suporte' },
+  { id: 'suporte.usuario', slash: 'suporte usuario', label: 'Histórico de tickets do usuário', category: 'suporte' },
+  { id: 'suporte.estatisticas', slash: 'suporte estatisticas', label: 'Estatísticas de suporte', category: 'suporte' },
+
   { id: 'configuracao.ver', slash: 'configuracao ver', label: 'Ver configuração do sistema', category: 'configuracao' },
   { id: 'configuracao.auditoria', slash: 'configuracao auditoria', label: 'Configurar canal de auditoria', category: 'configuracao' },
   { id: 'configuracao.cor', slash: 'configuracao cor', label: 'Alterar cor principal', category: 'configuracao' },
@@ -105,9 +110,4 @@ function commandsForCategory(category) {
   return COMMAND_CATALOG.filter(command => command.category === category);
 }
 
-module.exports = {
-  COMMAND_CATEGORIES,
-  COMMAND_CATALOG,
-  commandById,
-  commandsForCategory
-};
+module.exports = { COMMAND_CATEGORIES, COMMAND_CATALOG, commandById, commandsForCategory };
