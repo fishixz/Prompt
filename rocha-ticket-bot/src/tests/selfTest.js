@@ -5,6 +5,7 @@ const { panelMessage, ticketOpeningMessages, ticketCreatedEphemeral } = require(
 const { duplicatedCustomIds } = require('../services/diagnosticService');
 const { renderQuestionnaire } = require('../services/questionnaireService');
 const { buildRatingPayload } = require('../services/ratingService');
+const { buildPresetPage } = require('../services/ticketPresetService');
 const { selectorAssignmentPayload } = require('../handlers/configExtensionHandlers');
 const { renderChannelName, renderTemplate, buildVariables } = require('../utils/variables');
 
@@ -127,6 +128,16 @@ function run() {
   validatePayload('selector assignment 1/3', selectorAssignmentPayload(manySelectors, 'tipo-1', 0));
   validatePayload('selector assignment 2/3', selectorAssignmentPayload(manySelectors, 'tipo-1', 1));
   validatePayload('selector assignment 3/3', selectorAssignmentPayload(manySelectors, 'tipo-1', 2));
+
+  const manyPresets = buildFixture(1);
+  manyPresets.presets.moderation = Array.from({ length: 57 }, (_, index) => ({
+    id: `preset-${index + 1}`,
+    label: `Preset ${index + 1}`,
+    text: `Mensagem do preset ${index + 1}`
+  }));
+  validatePayload('ticket presets 1/3', buildPresetPage(manyPresets, 't_test', 'moderation', 0));
+  validatePayload('ticket presets 2/3', buildPresetPage(manyPresets, 't_test', 'moderation', 1));
+  validatePayload('ticket presets 3/3', buildPresetPage(manyPresets, 't_test', 'moderation', 2));
 
   const pendingSingle = {
     guildId: fakeGuild().id,
