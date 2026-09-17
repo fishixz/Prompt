@@ -23,6 +23,7 @@ const COMMAND_CATALOG = [
   { id: 'bot.avatar', slash: 'bot avatar', label: 'Alterar foto do bot', category: 'dono', ownerOnly: true },
   { id: 'bot.banner', slash: 'bot banner', label: 'Alterar banner do bot', category: 'dono', ownerOnly: true },
   { id: 'bot.status', slash: 'bot status', label: 'Alterar status/atividade do bot', category: 'dono', ownerOnly: true },
+  { id: 'update', slash: 'update', label: 'Atualizar RochaSystem', category: 'dono', ownerOnly: true },
 
   { id: 'dono.servidores', slash: 'dono servidores', label: 'Listar servidores do bot', category: 'dono', ownerOnly: true },
   { id: 'dono.recarregar-comandos', slash: 'dono recarregar-comandos', label: 'Recarregar comandos', category: 'dono', ownerOnly: true },
