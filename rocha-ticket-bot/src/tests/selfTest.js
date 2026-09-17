@@ -6,7 +6,7 @@ const { duplicatedCustomIds } = require('../services/diagnosticService');
 const { renderQuestionnaire } = require('../services/questionnaireService');
 const { buildRatingPayload } = require('../services/ratingService');
 const { buildPresetPage } = require('../services/ticketPresetService');
-const { selectorAssignmentPayload } = require('../handlers/configExtensionHandlers');
+const { selectorAssignmentPayload, advancedStatusPanel } = require('../handlers/configExtensionHandlers');
 const { renderChannelName, renderTemplate, buildVariables } = require('../utils/variables');
 
 function componentJson(component) {
@@ -104,6 +104,7 @@ function run() {
     ['securityPanel', views.securityPanel(config)],
     ['variablesPanel', views.variablesPanel(config)],
     ['backupPanel', views.backupPanel(config, validation)],
+    ['advancedStatusPanel', advancedStatusPanel(config, validation)],
     ['public panel', panelMessage(config, fakeGuild())]
   ];
 
