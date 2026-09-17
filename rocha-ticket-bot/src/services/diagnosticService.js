@@ -1,5 +1,7 @@
+const fs = require('node:fs/promises');
+const path = require('node:path');
 const { GatewayIntentBits, PermissionFlagsBits } = require('discord.js');
-const { getGuildConfig, getState } = require('../database/store');
+const { DB_PATH, getGuildConfig, getState } = require('../database/store');
 const { validateConfiguration } = require('./configService');
 const { panelMessage } = require('../panels/ticketPanel');
 const views = require('../panels/configPanel');
@@ -23,6 +25,21 @@ function duplicatedCustomIds(payload) {
     seen.add(id);
   }
   return [...duplicates];
+}
+
+async function databaseStats() {
+  let bytes = 0;
+  let backups = 0;
+  try {
+    const stat = await fs.stat(DB_PATH);
+    bytes = stat.size;
+  } catch {}
+  try {
+    const backupDir = path.join(path.dirname(DB_PATH), 'backups');
+    const files = await fs.readdir(backupDir);
+    backups = files.filter(name => name.endsWith('.json')).length;
+  } catch {}
+  return { bytes, backups };
 }
 
 async function runDiagnostics(guild, client) {
@@ -98,6 +115,8 @@ async function runDiagnostics(guild, client) {
 
   const guildTickets = Object.values(db.tickets).filter(ticket => ticket.guildId === guild.id);
   const active = guildTickets.filter(ticket => ['creating', 'open', 'closing'].includes(ticket.status));
+  const closed = guildTickets.filter(ticket => ticket.status === 'closed');
+  const orphaned = guildTickets.filter(ticket => ticket.status === 'orphaned');
   const numbers = new Map();
   for (const ticket of guildTickets) {
     const key = String(ticket.number);
@@ -125,11 +144,23 @@ async function runDiagnostics(guild, client) {
   else ok.push('Todos os tickets ativos possuem canal válido.');
   if (stuckClosing) warnings.push(`${stuckClosing} ticket(s) estão no estado closing; reiniciar o bot executa a recuperação automática.`);
   if (missingCalls) warnings.push(`${missingCalls} ticket(s) apontam para calls inexistentes.`);
+  if (orphaned.length) warnings.push(`${orphaned.length} ticket(s) órfão(s) estão preservados no histórico.`);
 
   const counter = Number(db.counters[guild.id] || config.ticket.counterStart || 1);
   const highest = guildTickets.reduce((max, ticket) => Math.max(max, Number(ticket.number) || 0), 0);
   if (counter <= highest) errors.push(`Contador atual (${counter}) não está acima do maior ticket (${highest}).`);
   else ok.push(`Contador consistente: próximo ${counter}, maior usado ${highest}.`);
+
+  const questionnaireResponses = Object.values(db.questionnaireResponses).filter(response => response.guildId === guild.id);
+  const pendingQuestionnaires = Object.values(db.pendingQuestionnaires).filter(response => response.guildId === guild.id);
+  const ratings = Object.values(db.ratings).filter(rating => rating.guildId === guild.id);
+  const pendingRatings = ratings.filter(rating => !rating.answeredAt);
+  const expiredCooldowns = Object.entries(db.cooldowns || {}).filter(([key, expiresAt]) => key.startsWith(`${guild.id}:`) && Number(expiresAt) <= Date.now()).length;
+  if (expiredCooldowns) warnings.push(`${expiredCooldowns} cooldown(s) expirado(s) aguardam a próxima limpeza automática.`);
+
+  const storage = await databaseStats();
+  if (!storage.backups) warnings.push('Ainda não há backup automático JSON em data/backups.');
+  else ok.push(`${storage.backups} backup(s) automático(s) disponível(is).`);
 
   return {
     config,
@@ -140,10 +171,16 @@ async function runDiagnostics(guild, client) {
     stats: {
       totalTickets: guildTickets.length,
       activeTickets: active.length,
-      questionnaireResponses: Object.values(db.questionnaireResponses).filter(r => r.guildId === guild.id).length,
-      ratings: Object.values(db.ratings).filter(r => r.guildId === guild.id).length
+      closedTickets: closed.length,
+      orphanedTickets: orphaned.length,
+      questionnaireResponses: questionnaireResponses.length,
+      pendingQuestionnaires: pendingQuestionnaires.length,
+      ratings: ratings.length,
+      pendingRatings: pendingRatings.length,
+      databaseBytes: storage.bytes,
+      backups: storage.backups
     }
   };
 }
 
-module.exports = { collectCustomIds, duplicatedCustomIds, runDiagnostics };
+module.exports = { collectCustomIds, duplicatedCustomIds, databaseStats, runDiagnostics };
