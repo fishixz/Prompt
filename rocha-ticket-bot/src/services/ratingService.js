@@ -2,10 +2,11 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder
+  EmbedBuilder,
+  MessageFlags
 } = require('discord.js');
 const { getGuildConfig, getState, mutate } = require('../database/store');
-const { getTicketType, logChannelFor } = require('./configService');
+const { logChannelFor } = require('./configService');
 const { buildVariables, renderTemplate } = require('../utils/variables');
 const { colorInt } = require('../utils/discord');
 
@@ -13,15 +14,27 @@ function ratingKey(ticketUid) {
   return ticketUid;
 }
 
+function ratingScale(config) {
+  return Math.max(3, Math.min(5, Number(config.rating.scale) || 5));
+}
+
 function buildRatingPayload(config, guild, ticket, type) {
   const vars = buildVariables({ guild, ticket, ticketType: type, config });
+  const scale = ratingScale(config);
+  const promptVars = { ...vars, rating_scale: String(scale) };
   const embed = new EmbedBuilder()
     .setColor(colorInt(config.branding.color))
-    .setTitle(renderTemplate(config.rating.promptTitle, vars))
-    .setDescription(renderTemplate(config.rating.promptText, vars));
+    .setTitle(renderTemplate(config.rating.promptTitle, promptVars))
+    .setDescription(renderTemplate(config.rating.promptText, promptVars));
   const row = new ActionRowBuilder();
-  for (let i = 1; i <= Math.min(5, Number(config.rating.scale) || 5); i++) {
-    row.addComponents(new ButtonBuilder().setCustomId(`rating:pick:${ticket.uid}:${i}`).setLabel(`${i}`).setEmoji('⭐').setStyle(ButtonStyle.Secondary));
+  for (let i = 1; i <= scale; i++) {
+    row.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`rating:pick:${ticket.uid}:${i}`)
+        .setLabel(`${i}`)
+        .setEmoji('⭐')
+        .setStyle(ButtonStyle.Secondary)
+    );
   }
   return { embeds: [embed], components: [row] };
 }
@@ -49,13 +62,13 @@ async function createRatingRecord(ticket, mode) {
 
 async function saveRating(ticketUid, value, comment) {
   return mutate(db => {
-    const r = db.ratings[ratingKey(ticketUid)];
-    if (!r) return null;
-    if (r.answeredAt) return r;
-    r.value = Number(value);
-    r.comment = comment || '';
-    r.answeredAt = new Date().toISOString();
-    return r;
+    const rating = db.ratings[ratingKey(ticketUid)];
+    if (!rating) return null;
+    if (rating.answeredAt) return rating;
+    rating.value = Number(value);
+    rating.comment = comment || '';
+    rating.answeredAt = new Date().toISOString();
+    return rating;
   });
 }
 
@@ -66,6 +79,7 @@ async function sendRatingPrompt(guild, ticket, ticketType, channel, user) {
   const payload = buildRatingPayload(config, guild, ticket, ticketType);
   await createRatingRecord(ticket, mode);
   const result = { sent: false, dm: false, ticket: false, mode };
+
   if (mode === 'dm' || mode === 'both') {
     try {
       await user.send(payload);
@@ -73,6 +87,7 @@ async function sendRatingPrompt(guild, ticket, ticketType, channel, user) {
       result.dm = true;
     } catch {}
   }
+
   if ((mode === 'ticket' || mode === 'both') && channel?.isTextBased()) {
     try {
       await channel.send({ content: `<@${user.id}>`, ...payload });
@@ -89,22 +104,32 @@ async function sendRatingLog(guild, ticket, ticketType, rating) {
   if (!channelId) return;
   const channel = guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null);
   if (!channel?.isTextBased()) return;
-  const stars = '⭐'.repeat(Math.max(1, Math.min(5, rating.value || 0)));
+
+  const scale = ratingScale(config);
+  const value = Math.max(1, Math.min(scale, Number(rating.value) || 1));
+  const stars = '⭐'.repeat(value);
   const embed = new EmbedBuilder()
     .setColor(colorInt(config.branding.color))
     .setTitle('⭐ Nova avaliação de atendimento')
-    .setDescription(`**Ticket:** #${String(ticket.number).padStart(4, '0')}\n**Usuário:** <@${ticket.userId}>\n**Tipo:** ${ticketType?.name || ticket.typeName}\n**Atendente:** ${ticket.claimedBy ? `<@${ticket.claimedBy}>` : '_não assumido_'}\n**Nota:** ${stars} (${rating.value}/5)\n**Comentário:** ${rating.comment || '_sem comentário_'}`)
+    .setDescription(`**Ticket:** #${String(ticket.number).padStart(4, '0')}\n**Usuário:** <@${ticket.userId}>\n**Tipo:** ${ticketType?.name || ticket.typeName}\n**Atendente:** ${ticket.claimedBy ? `<@${ticket.claimedBy}>` : '_não assumido_'}\n**Nota:** ${stars} (${value}/${scale})\n**Comentário:** ${rating.comment || '_sem comentário_'}`)
     .setTimestamp();
   await channel.send({ embeds: [embed] }).catch(() => null);
 }
 
 async function thankUser(interaction, config) {
-  const embed = new EmbedBuilder().setColor(0x20bf6b).setDescription(config.rating.thanksText || 'Obrigado pela sua avaliação!');
-  if (interaction.isModalSubmit()) return interaction.reply({ embeds: [embed], ephemeral: true }).catch(() => null);
-  return interaction.update({ embeds: [embed], components: [] }).catch(async () => interaction.reply({ embeds: [embed], ephemeral: true }).catch(() => null));
+  const embed = new EmbedBuilder()
+    .setColor(0x20bf6b)
+    .setDescription(config.rating.thanksText || 'Obrigado pela sua avaliação!');
+  if (interaction.isModalSubmit()) {
+    return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral }).catch(() => null);
+  }
+  return interaction.update({ embeds: [embed], components: [] }).catch(async () =>
+    interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral }).catch(() => null)
+  );
 }
 
 module.exports = {
+  ratingScale,
   buildRatingPayload,
   getRating,
   createRatingRecord,
