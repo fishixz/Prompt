@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict');
+const { allCommandData } = require('../commands/allCommands');
+const { commandById } = require('../system/commandCatalog');
 const {
   parseSemver,
   compareSemver,
@@ -25,6 +27,11 @@ async function run() {
   assert.equal(local, '2.0.0-beta.6');
   assert.equal(UPDATE_REPO, 'fishixz/RochaSystem');
   assert.equal(UPDATE_BRANCH, 'main');
+
+  const commandNames = allCommandData.map(command => command.name);
+  assert.equal(new Set(commandNames).size, commandNames.length, 'existem slash commands de topo duplicados');
+  assert.ok(commandNames.includes('update'), '/update não foi registrado');
+  assert.equal(commandById('update')?.ownerOnly, true, '/update precisa ser exclusivo do Dono');
 
   const newer = await checkForUpdate({
     fetchImpl: async () => ({ ok: true, text: async () => '2.0.0-beta.7\n' })
