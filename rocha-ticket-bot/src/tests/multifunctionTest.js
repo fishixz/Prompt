@@ -8,10 +8,11 @@ const { emojify } = require('../system/commands/fun');
 
 const names = extraCommandData.map(command => command.name);
 assert.equal(new Set(names).size, names.length, 'Comandos extras possuem nomes duplicados.');
-assert.deepEqual(new Set(names), new Set(['automod', 'pesquisa', 'diversao', 'jogo', 'nivel', 'backup']));
+assert.deepEqual(new Set(names), new Set(['automod', 'suporte', 'pesquisa', 'diversao', 'jogo', 'nivel', 'backup']));
 
 for (const id of [
   'automod.ver', 'automod.adicionar-palavra',
+  'suporte.abertos', 'suporte.meus',
   'pesquisa.github', 'diversao.oito-bola', 'jogo.ppt',
   'nivel.perfil', 'nivel.configurar', 'backup.criar', 'backup.restaurar'
 ]) {
@@ -23,6 +24,8 @@ assert.equal(config.identity.name, 'RochaSystem');
 assert.equal(DEFAULT_BIO, 'Sistema Oficial de Bots do RochaSystem.\n\nDeveloped with ♥️ by raposomodz');
 assert.equal(config.automod.enabled, false);
 assert.equal(config.levels.enabled, true);
+assert.ok(config.access.suporte.categories.includes('suporte'));
+assert.ok(config.access.cidadao.categories.includes('niveis'));
 
 assert.equal(normalizeWord('  OlÁ  '), 'ola');
 assert.equal(blockedWordInText('isso é uma PALAVRA ruim', ['palavra']), 'palavra');
@@ -32,5 +35,5 @@ assert.deepEqual(levelFromXp(0), { level: 0, currentXp: 0, requiredXp: 100 });
 assert.equal(levelFromXp(xpForLevel(0)).level, 1);
 assert.ok(emojify('abc').includes('🇦'));
 
-assert.ok(COMMAND_CATALOG.length >= 50, 'Catálogo multifunções ficou menor do que o esperado.');
+assert.ok(COMMAND_CATALOG.length >= 55, 'Catálogo multifunções ficou menor do que o esperado.');
 console.log(`✅ RochaSystem multifunction test: ${COMMAND_CATALOG.length} comandos catalogados; ${names.length} grupos extras válidos.`);
