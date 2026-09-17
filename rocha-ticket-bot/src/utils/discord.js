@@ -40,9 +40,33 @@ function simpleEmbed(config, title, description, color = null) {
 }
 
 function navButtons(backId, homeId = 'config:home') {
-  return new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(backId || homeId).setLabel('Voltar').setEmoji('⬅️').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(homeId).setLabel('Início').setEmoji('🏠').setStyle(ButtonStyle.Secondary)
+  const resolvedBackId = backId || homeId;
+  const row = new ActionRowBuilder();
+
+  // O Discord não permite dois componentes com o mesmo custom_id na mesma mensagem.
+  // Várias telas chamavam navButtons('config:home'), o que criava dois botões
+  // com custom_id "config:home" e quebrava qualquer atualização do painel.
+  if (resolvedBackId === homeId) {
+    return row.addComponents(
+      new ButtonBuilder()
+        .setCustomId(homeId)
+        .setLabel('Início')
+        .setEmoji('🏠')
+        .setStyle(ButtonStyle.Secondary)
+    );
+  }
+
+  return row.addComponents(
+    new ButtonBuilder()
+      .setCustomId(resolvedBackId)
+      .setLabel('Voltar')
+      .setEmoji('⬅️')
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(homeId)
+      .setLabel('Início')
+      .setEmoji('🏠')
+      .setStyle(ButtonStyle.Secondary)
   );
 }
 
