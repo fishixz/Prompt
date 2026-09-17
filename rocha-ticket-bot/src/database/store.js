@@ -27,20 +27,21 @@ function deepMerge(defaults, saved) {
 
 function initialState() {
   return {
-    version: 1,
+    version: 2,
     guilds: {},
     tickets: {},
     questionnaireResponses: {},
     pendingQuestionnaires: {},
     ratings: {},
     cooldowns: {},
-    counters: {}
+    counters: {},
+    moderationWarnings: {}
   };
 }
 
 function normalizeState(db) {
   if (!db || typeof db !== 'object' || Array.isArray(db)) throw new Error('Estrutura do banco JSON inválida.');
-  db.version ||= 1;
+  db.version = Math.max(2, Number(db.version) || 1);
   db.guilds ||= {};
   db.tickets ||= {};
   db.questionnaireResponses ||= {};
@@ -48,6 +49,7 @@ function normalizeState(db) {
   db.ratings ||= {};
   db.cooldowns ||= {};
   db.counters ||= {};
+  db.moderationWarnings ||= {};
   return db;
 }
 
