@@ -1,6 +1,6 @@
 {
   "name": "rochasystem",
-  "version": "2.0.0-beta.4",
+  "version": "2.0.0-beta.5",
   "description": "Sistema multifunções oficial do Rocha Roleplay: tickets, administração, moderação, suporte, AutoMod, níveis, backup, pesquisa, jogos e utilidades, compatível com Termux.",
   "main": "src/index.js",
   "type": "commonjs",
