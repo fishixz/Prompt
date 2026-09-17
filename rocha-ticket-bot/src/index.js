@@ -3,7 +3,8 @@ const {
   Client,
   GatewayIntentBits,
   Partials,
-  ActivityType
+  ActivityType,
+  Events
 } = require('discord.js');
 const { registerAll, registerGuildCommands } = require('./commands/registerCommands');
 const { interactionCreate } = require('./handlers/interactionCreate');
@@ -26,19 +27,19 @@ const client = new Client({
   partials: [Partials.Channel, Partials.Message]
 });
 
-client.once('ready', async () => {
-  console.log(`\n✅ Rocha Ticket conectado como ${client.user.tag}`);
-  console.log(`🏠 Servidores: ${client.guilds.cache.size}`);
-  client.user.setActivity('Tickets • Rocha Roleplay', { type: ActivityType.Watching });
+client.once(Events.ClientReady, async readyClient => {
+  console.log(`\n✅ Rocha Ticket conectado como ${readyClient.user.tag}`);
+  console.log(`🏠 Servidores: ${readyClient.guilds.cache.size}`);
+  readyClient.user.setActivity('Tickets • Rocha Roleplay', { type: ActivityType.Watching });
   await getState();
-  await registerAll(client);
-  await dueTicketCleanup(client).catch(console.error);
-  setInterval(() => dueTicketCleanup(client).catch(console.error), 60_000).unref();
+  await registerAll(readyClient);
+  await dueTicketCleanup(readyClient).catch(console.error);
+  setInterval(() => dueTicketCleanup(readyClient).catch(console.error), 60_000).unref();
 });
 
-client.on('guildCreate', guild => registerGuildCommands(guild));
-client.on('interactionCreate', interactionCreate);
-client.on('error', error => console.error('Discord client error:', error));
+client.on(Events.GuildCreate, guild => registerGuildCommands(guild));
+client.on(Events.InteractionCreate, interactionCreate);
+client.on(Events.Error, error => console.error('Discord client error:', error));
 process.on('unhandledRejection', error => console.error('Unhandled rejection:', error));
 process.on('uncaughtException', error => console.error('Uncaught exception:', error));
 
