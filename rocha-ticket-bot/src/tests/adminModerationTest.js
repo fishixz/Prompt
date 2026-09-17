@@ -55,8 +55,9 @@ function run() {
   assert.equal(moderationCatalog.length, EXPECTED_MODERATION.length, 'existem comandos de moderação sem rota/teste');
 
   const db = normalizeState({});
-  assert.equal(db.version, 2, 'banco não migrou para schema v2');
+  assert.equal(db.version, 3, 'banco não migrou para schema v3');
   assert.deepEqual(db.moderationWarnings, {}, 'armazenamento de advertências não foi inicializado');
+  assert.deepEqual(db.levels, {}, 'armazenamento de níveis não foi inicializado');
 
   const allTopLevel = commandData.map(command => command.name);
   assert.equal(new Set(allTopLevel).size, allTopLevel.length, 'slash command de topo duplicado');
