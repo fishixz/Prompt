@@ -13,7 +13,8 @@ const {
   reconcileTickets,
   markChannelDeleted
 } = require('./services/ticketService');
-const { syncStaffRolePermissions } = require('./services/permissionSyncService');
+const { syncAllGuildPermissions } = require('./services/permissionSyncService');
+const { createRollingBackup } = require('./services/backupService');
 const { getState } = require('./database/store');
 
 const token = process.env.DISCORD_TOKEN;
@@ -32,12 +33,8 @@ const client = new Client({
   partials: [Partials.Channel, Partials.Message]
 });
 
-async function syncAllGuildPermissions(clientInstance) {
-  for (const guild of clientInstance.guilds.cache.values()) {
-    await syncStaffRolePermissions(guild).catch(error =>
-      console.error(`Falha ao sincronizar permissões em ${guild.id}:`, error)
-    );
-  }
+async function runMaintenance(readyClient) {
+  await dueTicketCleanup(readyClient).catch(error => console.error('Ticket cleanup:', error));
 }
 
 client.once(Events.ClientReady, async readyClient => {
@@ -55,20 +52,29 @@ client.once(Events.ClientReady, async readyClient => {
     console.log(`🧹 Reconciliação: ${reconciliation.orphaned} órfão(s), ${reconciliation.recoveredClosing} fechamento(s) recuperado(s), ${reconciliation.missingCalls} call(s) ausente(s).`);
   }
 
-  await syncAllGuildPermissions(readyClient);
+  const permissionSync = await syncAllGuildPermissions(readyClient).catch(error => {
+    console.error('❌ Falha na sincronização inicial de permissões:', error);
+    return null;
+  });
+  if (permissionSync) {
+    console.log(`🔐 Permissões sincronizadas em ${permissionSync.tickets} ticket(s).`);
+  }
+
+  const backup = await createRollingBackup({ keep: 7 }).catch(error => {
+    console.error('❌ Falha ao criar backup inicial:', error);
+    return null;
+  });
+  if (backup) console.log(`💾 Backup automático criado: ${backup.filePath}`);
+
   await registerAll(readyClient);
-  await dueTicketCleanup(readyClient).catch(console.error);
+  await runMaintenance(readyClient);
 
-  setInterval(() => dueTicketCleanup(readyClient).catch(console.error), 60_000).unref();
-  // Reaplica/remova overwrites de cargos periodicamente para que mudanças no /config
-  // também alcancem tickets que já estavam abertos.
-  setInterval(() => syncAllGuildPermissions(readyClient), 5 * 60_000).unref();
+  setInterval(() => runMaintenance(readyClient), 60_000).unref();
+  setInterval(() => syncAllGuildPermissions(readyClient).catch(error => console.error('Permission sync:', error)), 5 * 60_000).unref();
+  setInterval(() => createRollingBackup({ keep: 7 }).catch(error => console.error('Automatic backup:', error)), 24 * 60 * 60_000).unref();
 });
 
-client.on(Events.GuildCreate, async guild => {
-  await registerGuildCommands(guild);
-  await syncStaffRolePermissions(guild).catch(() => null);
-});
+client.on(Events.GuildCreate, guild => registerGuildCommands(guild));
 client.on(Events.ChannelDelete, channel => markChannelDeleted(channel.id).catch(error => console.error('Channel delete reconciliation:', error)));
 client.on(Events.InteractionCreate, interactionCreate);
 client.on(Events.Error, error => console.error('Discord client error:', error));
