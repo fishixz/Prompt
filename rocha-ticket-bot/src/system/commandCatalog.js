@@ -24,6 +24,12 @@ const COMMAND_CATALOG = [
   { id: 'bot.banner', slash: 'bot banner', label: 'Alterar banner do bot', category: 'dono', ownerOnly: true },
   { id: 'bot.status', slash: 'bot status', label: 'Alterar status/atividade do bot', category: 'dono', ownerOnly: true },
 
+  { id: 'dono.servidores', slash: 'dono servidores', label: 'Listar servidores do bot', category: 'dono', ownerOnly: true },
+  { id: 'dono.recarregar-comandos', slash: 'dono recarregar-comandos', label: 'Recarregar comandos', category: 'dono', ownerOnly: true },
+  { id: 'dono.emojis', slash: 'dono emojis', label: 'Listar emojis do servidor', category: 'dono', ownerOnly: true },
+  { id: 'dono.runtime', slash: 'dono runtime', label: 'Informações do processo', category: 'dono', ownerOnly: true },
+  { id: 'dono.anunciar', slash: 'dono anunciar', label: 'Enviar anúncio', category: 'dono', ownerOnly: true },
+
   { id: 'admin.cargo-adicionar', slash: 'admin cargo-adicionar', label: 'Adicionar cargo', category: 'administracao' },
   { id: 'admin.cargo-remover', slash: 'admin cargo-remover', label: 'Remover cargo', category: 'administracao' },
   { id: 'admin.limpar', slash: 'admin limpar', label: 'Limpar mensagens', category: 'administracao' },
@@ -41,6 +47,17 @@ const COMMAND_CATALOG = [
   { id: 'moderacao.advertencias', slash: 'moderacao advertencias', label: 'Ver advertências', category: 'moderacao' },
   { id: 'moderacao.limpar-advertencias', slash: 'moderacao limpar-advertencias', label: 'Limpar advertências', category: 'moderacao' },
   { id: 'moderacao.remover-advertencia', slash: 'moderacao remover-advertencia', label: 'Remover uma advertência', category: 'moderacao' },
+
+  { id: 'configuracao.ver', slash: 'configuracao ver', label: 'Ver configuração do sistema', category: 'configuracao' },
+  { id: 'configuracao.auditoria', slash: 'configuracao auditoria', label: 'Configurar canal de auditoria', category: 'configuracao' },
+  { id: 'configuracao.cor', slash: 'configuracao cor', label: 'Alterar cor principal', category: 'configuracao' },
+  { id: 'configuracao.rodape', slash: 'configuracao rodape', label: 'Alterar rodapé', category: 'configuracao' },
+
+  { id: 'utilidade.ping', slash: 'utilidade ping', label: 'Ver latência do bot', category: 'utilidades' },
+  { id: 'utilidade.avatar', slash: 'utilidade avatar', label: 'Ver avatar', category: 'utilidades' },
+  { id: 'utilidade.usuario', slash: 'utilidade usuario', label: 'Informações de usuário', category: 'utilidades' },
+  { id: 'utilidade.servidor', slash: 'utilidade servidor', label: 'Informações do servidor', category: 'utilidades' },
+  { id: 'utilidade.convite', slash: 'utilidade convite', label: 'Criar convite temporário', category: 'utilidades' },
 
   { id: 'config', slash: 'config', label: 'Configurar RochaSystem', category: 'configuracao', ownerOnly: true },
   { id: 'painel', slash: 'painel', label: 'Publicar painel de tickets', category: 'tickets', ownerOnly: true },
