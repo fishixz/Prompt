@@ -1,0 +1,32 @@
+name: Rocha Ticket Bot Checks
+
+on:
+  push:
+    paths:
+      - 'rocha-ticket-bot/**'
+      - '.github/workflows/rocha-ticket-bot-test.yml'
+  pull_request:
+    paths:
+      - 'rocha-ticket-bot/**'
+      - '.github/workflows/rocha-ticket-bot-test.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rocha-ticket-bot
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: rocha-ticket-bot/package-lock.json
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Syntax and self tests
+        run: npm run check
