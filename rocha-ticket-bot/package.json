@@ -1,12 +1,12 @@
 {
   "name": "rochasystem",
-  "version": "2.0.0-beta.5",
-  "description": "Sistema multifunções oficial do Rocha Roleplay: tickets, administração, moderação, suporte, AutoMod, níveis, backup, pesquisa, jogos e utilidades, compatível com Termux.",
+  "version": "2.0.0-beta.6",
+  "description": "Sistema multifunções oficial do Rocha Roleplay: tickets, administração, moderação, suporte, AutoMod, níveis, backup, pesquisa, jogos, utilidades e atualização automática, compatível com Termux.",
   "main": "src/index.js",
   "type": "commonjs",
   "scripts": {
     "start": "node src/index.js",
-    "selftest": "node src/tests/selfTest.js && node src/tests/previewTest.js && node src/tests/systemTest.js && node src/tests/adminModerationTest.js && node src/tests/ownerSettingsUtilityTest.js && node src/tests/multifunctionTest.js",
+    "selftest": "node src/tests/selfTest.js && node src/tests/previewTest.js && node src/tests/systemTest.js && node src/tests/adminModerationTest.js && node src/tests/ownerSettingsUtilityTest.js && node src/tests/multifunctionTest.js && node src/tests/updateServiceTest.js",
     "check": "find src -name '*.js' -type f -print0 | xargs -0 -n1 node --check && npm run selftest"
   },
   "engines": {
