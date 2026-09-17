@@ -10,8 +10,11 @@ const { handleTicketPresetInteraction, isTicketPresetId } = require('../services
 const { previewMenu } = require('../services/previewService');
 const { configHome } = require('../panels/configPanel');
 const { panelMessage } = require('../panels/ticketPanel');
+const { appendSystemEntry } = require('../panels/systemConfigPanel');
 const { handleConfigComponent, handleConfigModal } = require('./configHandlers');
 const { handleConfigExtension, isConfigExtensionId } = require('./configExtensionHandlers');
+const { handleSystemConfig, isSystemConfigId } = require('./systemConfigHandlers');
+const { handleSystemSlashCommand } = require('./systemCommandHandler');
 const { handleQuestionnaireComponent, handleQuestionnaireModal } = require('./questionnaireHandlers');
 const { handleTicketCreateSelect, handleTicketButton, handleTicketSelect, handleTicketModal } = require('./ticketHandlers');
 const { handleRatingButton, handleRatingModal } = require('./ratingHandlers');
@@ -33,7 +36,8 @@ async function openConfig(interaction) {
   if (!interaction.inGuild()) return interaction.reply({ content: 'Use este comando dentro de um servidor.', flags: MessageFlags.Ephemeral });
   if (!await canConfigure(interaction)) return deny(interaction);
   const { config, validation } = await recomputeSetup(interaction.guild);
-  return interaction.reply(asEphemeral(configHome(config, validation)));
+  const view = appendSystemEntry(configHome(config, validation));
+  return interaction.reply(asEphemeral(view));
 }
 
 async function openPreviews(interaction) {
@@ -49,7 +53,7 @@ async function publishPanel(interaction) {
 
   const { config, validation } = await recomputeSetup(interaction.guild);
   if (!validation.ok) {
-    const view = configHome(config, validation);
+    const view = appendSystemEntry(configHome(config, validation));
     view.content = '⚠️ O `/painel` só será liberado quando os itens obrigatórios estiverem válidos.';
     return interaction.reply(asEphemeral(view));
   }
@@ -95,7 +99,7 @@ async function openDiagnostics(interaction) {
   const healthy = report.errors.length === 0;
   const embed = new EmbedBuilder()
     .setColor(healthy ? 0x20bf6b : 0xe74c3c)
-    .setTitle(healthy ? '✅ Diagnóstico • Rocha Ticket' : '⚠️ Diagnóstico • Rocha Ticket')
+    .setTitle(healthy ? '✅ Diagnóstico • RochaSystem' : '⚠️ Diagnóstico • RochaSystem')
     .setDescription([
       `**Erros:** ${report.errors.length}`,
       `**Avisos:** ${report.warnings.length}`,
@@ -124,7 +128,14 @@ async function interactionCreate(interaction) {
       if (interaction.commandName === 'painel') return publishPanel(interaction);
       if (interaction.commandName === 'preview') return openPreviews(interaction);
       if (interaction.commandName === 'diagnostico') return openDiagnostics(interaction);
+      if (await handleSystemSlashCommand(interaction)) return;
       return;
+    }
+
+    if (isSystemConfigId(interaction.customId || '')) {
+      if (!interaction.inGuild()) return deny(interaction);
+      if (!await canConfigure(interaction)) return deny(interaction);
+      return handleSystemConfig(interaction);
     }
 
     if (isConfigExtensionId(interaction.customId || '')) {
